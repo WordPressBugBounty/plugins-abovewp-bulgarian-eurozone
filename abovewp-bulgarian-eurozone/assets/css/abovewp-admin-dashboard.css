@@ -1,0 +1,153 @@
+/**
+ * AboveWP Admin Dashboard Styles
+ * Common styles for all AboveWP plugin dashboards
+ */
+
+/* Override WordPress admin background for AboveWP page */
+body.toplevel_page_abovewp {
+    background-color: #1C1C21;
+}
+
+/* AboveWP Logo and Header */
+.abovewp-admin-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.abovewp-logo {
+    max-width: 350px;
+    height: auto;
+    margin-bottom: 15px;
+}
+
+.about-text {
+    font-size: 16px;
+    color: #ffffff;
+    max-width: 800px;
+    margin: 0 auto 25px;
+}
+
+/* Dashboard Grid Layout */
+.aw-admin-dashboard {
+    margin-top: 20px;
+}
+
+.aw-admin-dashboard-content {
+    background: #1C1C21;
+    padding: 20px 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.aw-admin-dashboard-content h2 {
+    color: #ffffff;
+}
+
+.aw-admin-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 25px;
+}
+
+/* Plugin Cards */
+.aw-admin-dashboard-plugin {
+    background: #28282f;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #33333a;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.aw-admin-dashboard-plugin:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    border-color: #0582FF;
+}
+
+.aw-admin-dashboard-plugin:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: #0582FF;
+}
+
+.aw-admin-dashboard-plugin h3 {
+    margin-top: 5px;
+    margin-bottom: 15px;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.aw-admin-dashboard-plugin p {
+    margin-bottom: 20px;
+    color: #94A3B8;
+    flex-grow: 1;
+    line-height: 1.5;
+}
+
+.aw-admin-dashboard-plugin .button {
+    margin-right: 10px;
+    align-self: flex-start;
+}
+
+.aw-admin-dashboard-plugin .button-primary {
+    background-color: #0582FF;
+    border-color: #0582FF;
+    color: white;
+    padding: 5px 15px;
+    height: auto;
+    line-height: 1.8;
+    text-shadow: none;
+    box-shadow: none;
+}
+
+.aw-admin-dashboard-plugin .button-primary:hover {
+    background-color: #0470d8;
+    border-color: #0470d8;
+}
+
+/* Wrap override for dark theme */
+.wrap {
+    color: #ffffff;
+}
+
+.wrap h1 {
+    color: #0582FF;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .aw-admin-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .abovewp-admin-header {
+        margin-bottom: 20px;
+    }
+} 
+
+.abovewp-admin-header > img {
+    margin-top: 40px;
+}
+
+.abovewp-admin-header .about-text a {
+    color: #0582FF;
+    text-decoration: none;
+}
+  
+.abovewp-admin-header .about-text a:hover {
+    text-decoration: underline;
+}

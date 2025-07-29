@@ -1,0 +1,402 @@
+/**
+ * AboveWP Admin Page Default Styles
+ *
+ * This file contains default styling for all AboveWP plugin admin pages.
+ */
+
+/* Override WordPress admin background */
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone,
+body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone {
+  background-color: #1C1C21;
+}
+
+/* Hide WP admin notices in our custom pages */
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .notice:not(.abovewp-admin-page .notice),
+body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone .notice:not(.abovewp-admin-page .notice) {
+  display: none;
+}
+
+/* WP Admin page override to remove padding */
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone #wpcontent,
+body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent {
+  padding-left: 0;
+}
+
+/* Admin Page Container */
+.abovewp-admin-page {
+  background-color: #1C1C21;
+  color: #94A3B8;
+  padding: 20px;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* WordPress Color Picker Customization */
+.abovewp-admin-page .wp-picker-container {
+  display: inline-block;
+  position: relative;
+}
+
+.abovewp-admin-page .wp-picker-container .wp-color-result {
+  height: 30px;
+  border-radius: 0;
+  box-shadow: none;
+  padding-left: 40px;
+  background-image: none;
+}
+
+.abovewp-admin-page .wp-picker-container .wp-color-result:after {
+  background-color: #1C1C21;
+  color: #FFFFFF;
+  border-radius: 0 6px 6px 0;
+  border-left: 1px solid #4A5C75;
+  line-height: 28px;
+}
+
+.abovewp-admin-page .wp-picker-container .wp-color-result:hover:after {
+  color: #0582FF;
+}
+
+.abovewp-admin-page .wp-picker-container .wp-picker-input-wrap {
+  margin-top: 5px;
+}
+
+.abovewp-admin-page .wp-picker-container .wp-picker-input-wrap label {
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.abovewp-admin-page .wp-picker-container .wp-picker-input-wrap .wp-color-picker {
+  background-color: #1C1C21;
+  border: 1px solid #4A5C75;
+  border-radius: 6px;
+  color: #94A3B8;
+  height: 32px;
+  padding: 0 8px;
+  width: 80px;
+}
+
+.abovewp-admin-page .wp-picker-container .iris-picker {
+  background-color: #1C1C21 !important;
+  border: 1px solid #4A5C75 !important;
+  border-radius: 6px;
+  padding: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.abovewp-admin-page .wp-picker-container .iris-picker .iris-square,
+.abovewp-admin-page .wp-picker-container .iris-picker .iris-strip {
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(74, 92, 117, 0.5);
+}
+
+.abovewp-admin-page .wp-picker-container .iris-picker .iris-palette {
+  border: 1px solid #4A5C75 !important;
+  box-shadow: none !important;
+  border-radius: 3px;
+}
+
+.abovewp-admin-page .wp-picker-container .iris-picker .iris-palette-container {
+  padding: 5px 0 0 0;
+}
+
+.abovewp-admin-page .wp-picker-container .iris-picker .iris-palette:hover {
+  box-shadow: 0 0 0 2px #FF8B4A !important;
+}
+
+.abovewp-admin-page .wp-color-result-text {
+    background: #1C1C21;
+    color: #FFFFFF;
+    border-left: 1px solid transparent;
+}
+
+/* Admin Header with Logo */
+.abovewp-admin-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.abovewp-logo {
+  max-width: 200px;
+  height: auto;
+}
+
+/* Headings with varying font sizes */
+.abovewp-admin-page h1 {
+  color: #0582FF;
+  margin-bottom: 1rem;
+  font-size: 36px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.abovewp-admin-page h2 {
+  color: #94A3B8;
+  margin-bottom: 1rem;
+  font-size: 32px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.abovewp-admin-page h3 {
+  color: #94A3B8;
+  margin-bottom: 1rem;
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.abovewp-admin-page h4 {
+  color: #94A3B8;
+  margin-bottom: 1rem;
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.abovewp-admin-page p {
+  color: #94A3B8;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.abovewp-admin-page a {
+  color: #0582FF;
+  text-decoration: none;
+}
+
+.abovewp-admin-page a:hover {
+  text-decoration: underline;
+}
+
+/* Form Elements */
+.abovewp-admin-page .form-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.abovewp-admin-page .form-table th {
+  text-align: left;
+  padding: 15px 10px;
+  vertical-align: top;
+  width: 200px;
+  color: #FFFFFF;
+  font-weight: normal;
+}
+
+/* Inputs */
+.abovewp-admin-page input[type="text"],
+.abovewp-admin-page input[type="password"],
+.abovewp-admin-page input[type="email"],
+.abovewp-admin-page input[type="number"],
+.abovewp-admin-page input[type="url"],
+.abovewp-admin-page input[type="tel"],
+.abovewp-admin-page input[type="search"],
+.abovewp-admin-page input[type="date"],
+.abovewp-admin-page input[type="time"],
+.abovewp-admin-page input[type="datetime-local"],
+.abovewp-admin-page input[type="month"],
+.abovewp-admin-page input[type="week"],
+.abovewp-admin-page textarea,
+.abovewp-admin-page select {
+  background-color: #1C1C21;
+  border: 1px solid #4A5C75;
+  border-radius: 6px;
+  color: #94A3B8;
+  padding: 8px 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.abovewp-admin-page input[type="text"]::placeholder,
+.abovewp-admin-page input[type="password"]::placeholder,
+.abovewp-admin-page input[type="email"]::placeholder,
+.abovewp-admin-page input[type="number"]::placeholder,
+.abovewp-admin-page input[type="url"]::placeholder,
+.abovewp-admin-page input[type="tel"]::placeholder,
+.abovewp-admin-page input[type="search"]::placeholder,
+.abovewp-admin-page input[type="date"]::placeholder,
+.abovewp-admin-page input[type="time"]::placeholder,
+.abovewp-admin-page input[type="datetime-local"]::placeholder,
+.abovewp-admin-page input[type="month"]::placeholder,
+.abovewp-admin-page input[type="week"]::placeholder,
+.abovewp-admin-page textarea::placeholder,
+.abovewp-admin-page select::placeholder {
+  color: #94A3B8;
+  opacity: 0.7;
+}
+
+.abovewp-admin-page input[type="text"]:focus,
+.abovewp-admin-page input[type="password"]:focus,
+.abovewp-admin-page input[type="email"]:focus,
+.abovewp-admin-page input[type="number"]:focus,
+.abovewp-admin-page input[type="url"]:focus,
+.abovewp-admin-page input[type="tel"]:focus,
+.abovewp-admin-page input[type="search"]:focus,
+.abovewp-admin-page input[type="date"]:focus,
+.abovewp-admin-page input[type="time"]:focus,
+.abovewp-admin-page input[type="datetime-local"]:focus,
+.abovewp-admin-page input[type="month"]:focus,
+.abovewp-admin-page input[type="week"]:focus,
+.abovewp-admin-page textarea:focus,
+.abovewp-admin-page select:focus {
+  border-color: #0582FF;
+  box-shadow: 0 0 0 1px #0582FF;
+  outline: none;
+}
+
+/* Checkboxes and Radio Buttons */
+.abovewp-admin-page input[type="checkbox"],
+.abovewp-admin-page input[type="radio"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #4A5C75;
+  border-radius: 6px;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+}
+
+.abovewp-admin-page input[type="radio"] {
+  border-radius: 50%;
+}
+
+.abovewp-admin-page input[type="checkbox"]:checked,
+.abovewp-admin-page input[type="radio"]:checked {
+  background-color: #FF8B4A;
+  border-color: #FF8B4A;
+}
+
+.abovewp-admin-page input[type="checkbox"]:checked::before,
+.abovewp-admin-page input[type="radio"]:checked::before {
+  margin: 0;
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.abovewp-admin-page input[type="checkbox"]:checked::before {
+  width: 6px;
+  height: 12px;
+  border: solid #0A0A0C;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+.abovewp-admin-page input[type="radio"]:checked::before {
+  width: 12px;
+  height: 12px;
+  background-color: #0A0A0C;
+  border-radius: 50%;
+}
+
+.abovewp-admin-page input[type="checkbox"]:hover,
+.abovewp-admin-page input[type="radio"]:hover {
+  border-color: #FF8B4A;
+  box-shadow: 0 0 0 1px #FF8B4A;
+}
+
+.abovewp-admin-page input[type="checkbox"]:focus,
+.abovewp-admin-page input[type="radio"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #FF8B4A;
+}
+
+/* Labels */
+.abovewp-admin-page label {
+  color: #FFFFFF;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Buttons */
+.abovewp-admin-page .button,
+.abovewp-admin-page .button-primary {
+  background-color: #FF8B4A;
+  border: none;
+  border-radius: 6px;
+  color: #0A0A0C;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.abovewp-admin-page .button:hover,
+.abovewp-admin-page .button-primary:hover {
+  background-color: transparent;
+  box-shadow: 0 0 0 1px #FF8B4A;
+  outline: 1px solid #FF8B4A;
+}
+
+.abovewp-admin-page .button:focus,
+.abovewp-admin-page .button-primary:focus {
+  box-shadow: 0 0 0 2px #FF8B4A;
+  outline: 1px solid #FF8B4A;
+}
+
+.abovewp-admin-page .button-secondary {
+  background-color: transparent;
+  border: 1px solid #4A5C75;
+  color: #94A3B8;
+}
+
+.abovewp-admin-page .button-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #0582FF;
+}
+
+/* Notices/Messages */
+.abovewp-admin-page .notice {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid #0582FF;
+  border-radius: 6px;
+  margin: 1rem 0;
+  padding: 12px;
+}
+
+.abovewp-admin-page .notice.notice-warning {
+  border-left-color: #f0ad4e;
+}
+
+.abovewp-admin-page .notice.notice-error {
+  border-left-color: #d9534f;
+}
+
+.abovewp-admin-page .notice.notice-success {
+  border-left-color: #5cb85c;
+}
+
+/* Tables */
+.abovewp-admin-page table.widefat {
+  background-color: transparent;
+  border: 1px solid #4A5C75;
+  border-radius: 6px;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.abovewp-admin-page table.widefat th {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
+  padding: 10px;
+  text-align: left;
+}
+
+.abovewp-admin-page table.widefat td {
+  border-top: 1px solid #4A5C75;
+  padding: 10px;
+}
+
+.abovewp-admin-page table.widefat tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+} 

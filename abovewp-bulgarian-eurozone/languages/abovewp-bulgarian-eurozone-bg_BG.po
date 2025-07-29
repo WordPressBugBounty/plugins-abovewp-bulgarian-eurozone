@@ -1,0 +1,233 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: AboveWP Bulgarian Eurozone 1.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/abovewp-bulgarian-eurozone\n"
+"Last-Translator: \n"
+"Language-Team: Bulgarian <bg@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2023-12-15T12:00:00+00:00\n"
+"PO-Revision-Date: 2023-12-15 12:00+0200\n"
+"Language: bg_BG\n"
+"X-Generator: WP-CLI 2.7.1\n"
+"X-Domain: abovewp-bulgarian-eurozone\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Plugin Name of the plugin
+#: abovewp-bulgarian-eurozone.php
+msgid "AboveWP Bulgarian Eurozone"
+msgstr "AboveWP Българска Еврозона"
+
+#. Author URI of the plugin
+#: abovewp-bulgarian-eurozone.php
+msgid "https://abovewp.com"
+msgstr "https://abovewp.com"
+
+#. Description of the plugin
+#: abovewp-bulgarian-eurozone.php
+#: abovewp-bulgarian-eurozone.php:760
+msgid "Adds dual currency display (BGN and EUR) for WooCommerce as Bulgaria prepares to join the Eurozone"
+msgstr "Добавя двойно показване на валути (BGN и EUR) за WooCommerce, докато България се подготвя за присъединяване към Еврозоната"
+
+#. Author of the plugin
+#: abovewp-bulgarian-eurozone.php
+#: includes/class-abovewp-admin-menu.php:63
+#: includes/class-abovewp-admin-menu.php:64
+msgid "AboveWP"
+msgstr "AboveWP"
+
+#: abovewp-bulgarian-eurozone.php:124
+msgid "AboveWP Bulgarian Eurozone requires WooCommerce to be installed and active."
+msgstr "AboveWP Българска Еврозона изисква инсталиран и активен WooCommerce."
+
+#: abovewp-bulgarian-eurozone.php:136
+msgid "Settings"
+msgstr "Настройки"
+
+#: abovewp-bulgarian-eurozone.php:244
+#: abovewp-bulgarian-eurozone.php:342
+msgid "Bulgarian Eurozone Settings"
+msgstr "Настройки на Българска Еврозона"
+
+#: abovewp-bulgarian-eurozone.php:245
+msgid "Eurozone Settings"
+msgstr "Настройки на Еврозоната"
+
+#: abovewp-bulgarian-eurozone.php:347
+msgid "This plugin requires your WooCommerce currency to be set to Bulgarian Lev (BGN). The dual currency display will not work until you change your store currency to BGN."
+msgstr "Този плъгин изисква вашата валута на WooCommerce да бъде настроена на Български лев (BGN). Двойното показване на валути няма да работи, докато не промените валутата на магазина на BGN."
+
+#: abovewp-bulgarian-eurozone.php:351
+msgid "Change Currency Settings"
+msgstr "Промяна на настройките за валута"
+
+#: abovewp-bulgarian-eurozone.php:364
+msgid "Enable Dual Currency Display"
+msgstr "Активиране на показване на двойна валута"
+
+#: abovewp-bulgarian-eurozone.php:367
+msgid "Yes"
+msgstr "Да"
+
+#: abovewp-bulgarian-eurozone.php:368
+msgid "No"
+msgstr "Не"
+
+#: abovewp-bulgarian-eurozone.php:371
+msgid "Dual currency display is only available when your store currency is BGN."
+msgstr "Показването на двойна валута е достъпно само когато валутата на вашия магазин е BGN."
+
+#: abovewp-bulgarian-eurozone.php:383
+msgid "EUR Price Label"
+msgstr "Етикет на цена в EUR"
+
+#: abovewp-bulgarian-eurozone.php:386
+msgid "The label to use for EUR prices (default: €)"
+msgstr "Етикетът, който да се използва за цени в евро (по подразбиране: €)"
+
+#: abovewp-bulgarian-eurozone.php:389
+msgid "EUR Price Position"
+msgstr "Позиция на цената в EUR"
+
+#: abovewp-bulgarian-eurozone.php:392
+msgid "Right of BGN price"
+msgstr "Вдясно от цената в BGN"
+
+#: abovewp-bulgarian-eurozone.php:393
+msgid "Left of BGN price"
+msgstr "Вляво от цената в BGN"
+
+#: abovewp-bulgarian-eurozone.php:395
+msgid "Choose whether EUR prices appear on the left or right of BGN prices"
+msgstr "Изберете дали цените в EUR да се показват отляво или отдясно на цените в BGN"
+
+#: abovewp-bulgarian-eurozone.php:400
+msgid "EUR Price Display Format"
+msgstr "Формат на показване на цената в EUR"
+
+#: abovewp-bulgarian-eurozone.php:403
+msgid "Brackets (25лв. (12.78 €))"
+msgstr "Скоби (25лв. (12.78 €))"
+
+#: abovewp-bulgarian-eurozone.php:404
+msgid "Side divider (25лв. / 12.78 €)"
+msgstr "Страничен разделител (25лв. / 12.78 €)"
+
+#: abovewp-bulgarian-eurozone.php:406
+msgid "Choose how EUR prices are displayed relative to BGN prices"
+msgstr "Изберете как цените в евро да се показват спрямо цените в лева"
+
+#. Translators: %s is the currency label (EUR)
+#: abovewp-bulgarian-eurozone.php:634
+msgid "Total (%s)"
+msgstr "Общо (%s)"
+
+#. Translators: %s is the currency label (EUR)
+#: abovewp-bulgarian-eurozone.php:608
+msgid "Total (%s):"
+msgstr "Общо (%s):"
+
+#: abovewp-bulgarian-eurozone.php:759
+msgid "Bulgarian Eurozone"
+msgstr "Българска Еврозона"
+
+#: abovewp-bulgarian-eurozone.php:762
+msgid "Configure"
+msgstr "Конфигуриране"
+
+#: abovewp-bulgarian-eurozone.php:302
+#: abovewp-bulgarian-eurozone.php:398
+msgid "Single product pages"
+msgstr "Страници на единични продукти"
+
+#: abovewp-bulgarian-eurozone.php:303
+#: abovewp-bulgarian-eurozone.php:399
+msgid "Variable product pages"
+msgstr "Страници на продукти с вариации"
+
+#: abovewp-bulgarian-eurozone.php:304
+#: abovewp-bulgarian-eurozone.php:400
+msgid "Cart item prices"
+msgstr "Цени на артикули в кошницата"
+
+#: abovewp-bulgarian-eurozone.php:305
+#: abovewp-bulgarian-eurozone.php:401
+msgid "Cart subtotals"
+msgstr "Междинни суми в кошницата"
+
+#: abovewp-bulgarian-eurozone.php:306
+#: abovewp-bulgarian-eurozone.php:402
+msgid "Cart totals"
+msgstr "Общи суми в кошницата"
+
+#: abovewp-bulgarian-eurozone.php:307
+#: abovewp-bulgarian-eurozone.php:403
+msgid "Order confirmation & email"
+msgstr "Потвърждение на поръчката и имейл"
+
+#: abovewp-bulgarian-eurozone.php:308
+#: abovewp-bulgarian-eurozone.php:404
+msgid "My Account orders table"
+msgstr "Таблица с поръчки в Моят профил"
+
+#: abovewp-bulgarian-eurozone.php:309
+#: abovewp-bulgarian-eurozone.php:405
+msgid "REST API responses"
+msgstr "REST API отговори"
+
+#: abovewp-bulgarian-eurozone.php:310
+#: abovewp-bulgarian-eurozone.php:406
+msgid "Shipping method labels"
+msgstr "Етикети на методи за доставка"
+
+#: abovewp-bulgarian-eurozone.php:311
+#: abovewp-bulgarian-eurozone.php:407
+msgid "Tax amount labels"
+msgstr "Етикети на данъчни суми"
+
+#: abovewp-bulgarian-eurozone.php:312
+#: abovewp-bulgarian-eurozone.php:408
+msgid "Mini cart"
+msgstr "Мини кошница"
+
+#. Translators: %s is the name of the location where EUR price can be displayed (e.g. "Single product pages")
+#: abovewp-bulgarian-eurozone.php:327
+msgid "Show EUR price on %s"
+msgstr "Показване на цена в EUR на %s"
+
+#: abovewp-bulgarian-eurozone.php:361
+msgid "General Settings"
+msgstr "Общи настройки"
+
+#: abovewp-bulgarian-eurozone.php:392
+msgid "Display Locations"
+msgstr "Локации за показване"
+
+#: abovewp-bulgarian-eurozone.php:393
+msgid "Select where you want to display EUR prices:"
+msgstr "Изберете къде искате да се показват цените в EUR:"
+
+#: abovewp-bulgarian-eurozone.php:419
+msgid "Show EUR price"
+msgstr "Показване на цена в EUR"
+
+#: includes/class-abovewp-admin-menu.php:83
+msgctxt "abovewp"
+msgid "Visit our website"
+msgstr "Посетете нашия уебсайт"
+
+#: includes/class-abovewp-admin-menu.php:88
+msgctxt "abovewp"
+msgid "Available Plugins"
+msgstr "Налични плъгини"
+
+#: abovewp-bulgarian-eurozone.php:313
+#: abovewp-bulgarian-eurozone.php:409
+msgid "Thank you / Order received page"
+msgstr "Страница за благодарност / Получена поръчка"
+
+#. translators: %s is the formatted price in EUR
+#: abovewp-bulgarian-eurozone.php:860
+msgid "Order Total in EUR: %s"
+msgstr "Обща сума на поръчката в EUR: %s"

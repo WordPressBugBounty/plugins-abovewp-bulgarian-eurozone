@@ -1,0 +1,21 @@
+/**
+ * Styles for EUR prices in Gutenberg blocks
+ */
+.wp-block-woocommerce-cart .eur-price,
+.wp-block-woocommerce-checkout .eur-price,
+.wp-block-woocommerce-mini-cart .eur-price {
+    margin-left: 4px;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+/* Additional specific styles for cart blocks */
+.wc-block-components-totals-item__value .eur-price,
+.wc-block-components-product-price .eur-price {
+    margin-left: 4px;
+}
+
+.wc-block-cart-item__total-price-and-sale-badge-wrapper .eur-price {
+    display: block;
+    margin-top: 2px;
+}
