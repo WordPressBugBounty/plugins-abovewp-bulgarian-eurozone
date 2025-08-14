@@ -4,7 +4,7 @@ Tags: eurozone, bulgaria, currency, dual-currency, euro
 Requires at least: 5.0
 Tested up to: 6.8
 Requires PHP: 7.2
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 WC requires at least: 5.0
@@ -77,6 +77,9 @@ Once Bulgaria changes the primary currency we will have a functionality ready, s
 
 == Changelog ==
 
+= 1.2.4 =
+* Fix tax display in order total for some themes
+
 = 1.2.3 =
 * Now shows old price on sale products in euro as well.
 
@@ -132,6 +135,9 @@ Once Bulgaria changes the primary currency we will have a functionality ready, s
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.2.4 =
+Fix tax display in order total for some themes
 
 = 1.2.3 =
 Now shows old price on sale products in euro as well.

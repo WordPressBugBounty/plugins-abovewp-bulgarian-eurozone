@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AboveWP Bulgarian Eurozone
  * Description: Adds dual currency display (BGN and EUR) for WooCommerce as Bulgaria prepares to join the Eurozone
- * Version: 1.2.3
+ * Version: 1.2.4
  * Author: AboveWP
  * Author URI: https://abovewp.com
  * Text Domain: abovewp-bulgarian-eurozone
@@ -21,7 +21,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('ABOVEWP_BGE_VERSION', '1.2.3');
+define('ABOVEWP_BGE_VERSION', '1.2.4');
 define('ABOVEWP_BGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ABOVEWP_BGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -566,6 +566,70 @@ class AboveWP_Bulgarian_Eurozone {
     }
 
     /**
+     * Add EUR conversion to inline tax display within includes_tax elements
+     *
+     * @param string $html The HTML containing potential includes_tax elements
+     * @return string Modified HTML with EUR tax amounts added
+     */
+    private function add_eur_to_inline_tax_display($html) {
+        // Check if the HTML contains includes_tax class and BGN currency symbol
+        if (strpos($html, 'includes_tax') === false || strpos($html, 'лв.') === false) {
+            return $html;
+        }
+        
+        // Use a regex to find and replace tax amounts within includes_tax elements
+        $pattern = '/<small[^>]*class="[^"]*includes_tax[^"]*"[^>]*>(.*?)<\/small>/s';
+        
+        return preg_replace_callback($pattern, array($this, 'replace_inline_tax_amounts'), $html);
+    }
+
+    /**
+     * Callback function to replace tax amounts within includes_tax elements
+     *
+     * @param array $matches Regex matches
+     * @return string Modified small element with EUR tax amounts
+     */
+    private function replace_inline_tax_amounts($matches) {
+        $tax_content = $matches[1];
+        
+        // Find all BGN price amounts within the tax content
+        // Look for patterns like "8.32&nbsp;<span class="woocommerce-Price-currencySymbol">лв.</span>"
+        $price_pattern = '/(\d+(?:\.\d{2})?)\s*(?:&nbsp;)?<span[^>]*class="[^"]*woocommerce-Price-currencySymbol[^"]*"[^>]*>лв\.<\/span>/';
+        
+        $modified_content = preg_replace_callback($price_pattern, function($price_matches) {
+            $bgn_amount = floatval($price_matches[1]);
+            $eur_amount = $this->convert_bgn_to_eur($bgn_amount);
+            $eur_formatted = number_format($eur_amount, 2);
+            
+            // Return the original BGN amount plus EUR equivalent
+            $format = get_option('abovewp_bge_eur_format', 'brackets');
+            if ($format === 'divider') {
+                return $price_matches[0] . ' / ' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label());
+            } else {
+                return $price_matches[0] . ' (' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label()) . ')';
+            }
+        }, $tax_content);
+        
+        // Also handle simpler patterns like "8.32 лв." without spans
+        $simple_pattern = '/(\d+(?:\.\d{2})?)\s*лв\./';
+        $modified_content = preg_replace_callback($simple_pattern, function($price_matches) {
+            $bgn_amount = floatval($price_matches[1]);
+            $eur_amount = $this->convert_bgn_to_eur($bgn_amount);
+            $eur_formatted = number_format($eur_amount, 2);
+            
+            // Return the original BGN amount plus EUR equivalent
+            $format = get_option('abovewp_bge_eur_format', 'brackets');
+            if ($format === 'divider') {
+                return $price_matches[0] . ' / ' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label());
+            } else {
+                return $price_matches[0] . ' (' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label()) . ')';
+            }
+        }, $modified_content);
+        
+        return '<small' . substr($matches[0], 6, strpos($matches[0], '>') - 6) . '>' . $modified_content . '</small>';
+    }
+
+    /**
      * Add EUR price to existing value based on position setting
      *
      * @param string $existing_value The existing price value
@@ -740,6 +804,9 @@ class AboveWP_Bulgarian_Eurozone {
         $cart_total_bgn = WC()->cart->get_total(false);
         $cart_total_eur = $this->convert_bgn_to_eur($cart_total_bgn);
         
+        // Handle inline tax display within includes_tax small element
+        $total = $this->add_eur_to_inline_tax_display($total);
+        
         return $this->format_dual_price($total, $cart_total_eur);
     }
 
@@ -845,6 +912,10 @@ class AboveWP_Bulgarian_Eurozone {
                 // Add EUR to order total (total always includes all taxes and fees)
                 $total_bgn = $order->get_total();
                 $total_eur = $this->convert_bgn_to_eur($total_bgn);
+                
+                // Handle inline tax display within includes_tax small element
+                $row['value'] = $this->add_eur_to_inline_tax_display($row['value']);
+                
                 $row['value'] = $this->add_eur_to_value($row['value'], $total_eur);
             }
             
