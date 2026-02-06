@@ -6,19 +6,22 @@
 
 /* Override WordPress admin background */
 body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone,
-body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone {
+body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone,
+body.wp-admin.abovewp_page_abovewp-currency-migration {
   background-color: #1C1C21;
 }
 
 /* Hide WP admin notices in our custom pages */
 body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .notice:not(.abovewp-admin-page .notice),
-body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone .notice:not(.abovewp-admin-page .notice) {
+body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone .notice:not(.abovewp-admin-page .notice),
+body.wp-admin.abovewp_page_abovewp-currency-migration .notice:not(.abovewp-admin-page .notice) {
   display: none;
 }
 
 /* WP Admin page override to remove padding */
 body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone #wpcontent,
-body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent {
+body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent,
+body.wp-admin.abovewp_page_abovewp-currency-migration #wpcontent {
   padding-left: 0;
 }
 
@@ -127,7 +130,7 @@ body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent {
 .abovewp-admin-page h1 {
   color: #0582FF;
   margin-bottom: 1rem;
-  font-size: 36px;
+  font-size: 24px;
   line-height: 1.2;
   font-weight: 600;
 }
@@ -135,7 +138,7 @@ body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent {
 .abovewp-admin-page h2 {
   color: #94A3B8;
   margin-bottom: 1rem;
-  font-size: 32px;
+  font-size: 20px;
   line-height: 1.25;
   font-weight: 600;
 }
@@ -143,7 +146,7 @@ body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent {
 .abovewp-admin-page h3 {
   color: #94A3B8;
   margin-bottom: 1rem;
-  font-size: 28px;
+  font-size: 18px;
   line-height: 1.3;
   font-weight: 500;
 }
@@ -151,7 +154,7 @@ body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent {
 .abovewp-admin-page h4 {
   color: #94A3B8;
   margin-bottom: 1rem;
-  font-size: 24px;
+  font-size: 16px;
   line-height: 1.35;
   font-weight: 500;
 }
@@ -399,4 +402,333 @@ body.wp-admin.abovewp_page_abovewp-bulgarian-eurozone #wpcontent {
 
 .abovewp-admin-page table.widefat tr:hover td {
   background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Custom notice boxes for AboveWP admin pages */
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-info-box,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-info-box,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-warning-box,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-warning-box,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-success-box,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-success-box,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-error-box,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-error-box {
+  background: rgba(5, 130, 255, 0.1);
+  border-left: 4px solid #0582FF;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 6px;
+  color: #FFFFFF;
+}
+
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-warning-box,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-warning-box {
+  background: rgba(255, 193, 7, 0.1);
+  border-left-color: #FFC107;
+}
+
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-success-box,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-success-box {
+  background: rgba(76, 175, 80, 0.1);
+  border-left-color: #4CAF50;
+}
+
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-error-box,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-error-box {
+  background: rgba(244, 67, 54, 0.1);
+  border-left-color: #F44336;
+}
+
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-info-box h3,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-info-box h3,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-warning-box h3,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-warning-box h3,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-success-box h3,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-success-box h3,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-error-box h3,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-error-box h3 {
+  margin-top: 0;
+  color: #FFFFFF;
+}
+
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-info-box p,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-info-box p,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-warning-box p,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-warning-box p,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-success-box p,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-success-box p,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-error-box p,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-error-box p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-info-box .dashicons,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-info-box .dashicons,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-warning-box .dashicons,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-warning-box .dashicons,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-success-box .dashicons,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-success-box .dashicons,
+body.wp-admin.toplevel_page_abovewp-bulgarian-eurozone .abovewp-error-box .dashicons,
+body.wp-admin.abovewp_page_abovewp-currency-migration .abovewp-error-box .dashicons {
+  font-size: 24px;
+  vertical-align: middle;
+}
+
+/* Currency notice styling */
+.abovewp-admin-page .abovewp-currency-notice {
+  background: rgba(5, 130, 255, 0.1);
+  border-left: 4px solid #0582FF;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 6px;
+  color: #FFFFFF;
+}
+
+.abovewp-admin-page .abovewp-currency-notice-content {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.abovewp-admin-page .abovewp-currency-notice-content .dashicons {
+  color: #0582FF;
+  font-size: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.abovewp-admin-page .abovewp-currency-notice-text {
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 8px 0;
+  color: #FFFFFF;
+}
+
+.abovewp-admin-page .abovewp-currency-notice-text:last-child {
+  margin-bottom: 0;
+}
+
+.abovewp-admin-page .abovewp-currency-notice-text strong {
+  color: #FFFFFF;
+}
+
+.abovewp-admin-page .abovewp-currency-notice-actions {
+  margin: 0;
+}
+
+.abovewp-admin-page .abovewp-currency-notice-actions .button-primary .dashicons {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+/* Migration page specific styling */
+.abovewp-admin-page .abovewp-migration-title {
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+  font-size: 24px;
+}
+
+.abovewp-admin-page .abovewp-migration-title .dashicons {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abovewp-admin-page .abovewp-migration-description {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.abovewp-admin-page .abovewp-warning-title {
+  margin-top: 0;
+  color: #FFC107;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+  font-size: 18px;
+}
+
+.abovewp-admin-page .abovewp-warning-title .dashicons {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abovewp-admin-page .abovewp-warning-list {
+  list-style: disc;
+  margin-left: 20px;
+  line-height: 1.8;
+}
+
+.abovewp-admin-page .abovewp-warning-critical {
+  color: #FF8B4A;
+  font-weight: bold;
+}
+
+.abovewp-admin-page .abovewp-migration-status {
+  display: none;
+  background: rgba(5, 130, 255, 0.1);
+  border-left: 4px solid #0582FF;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 6px;
+}
+
+.abovewp-admin-page .abovewp-migration-progress-title {
+  margin-top: 0;
+  color: #0582FF;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+  font-size: 18px;
+}
+
+.abovewp-admin-page .abovewp-migration-progress-title .dashicons {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abovewp-admin-page .abovewp-progress-wrapper {
+  margin: 15px 0;
+}
+
+.abovewp-admin-page .abovewp-progress-bar-container {
+  background: rgba(255,255,255,0.1);
+  height: 40px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid #4A5C75;
+}
+
+.abovewp-admin-page .abovewp-progress-bar {
+  background: #FF8B4A;
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0A0A0C;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.abovewp-admin-page .abovewp-progress-text {
+  margin: 10px 0;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.abovewp-admin-page .abovewp-migration-log {
+  max-height: 300px;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.05);
+  padding: 15px;
+  border: 1px solid #4A5C75;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.abovewp-admin-page .abovewp-success-box {
+  display: none;
+  background: rgba(76, 175, 80, 0.1);
+  border-left-color: #4CAF50;
+}
+
+.abovewp-admin-page .abovewp-success-title {
+  margin-top: 0;
+  color: #4CAF50;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+  font-size: 18px;
+}
+
+.abovewp-admin-page .abovewp-success-title .dashicons {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abovewp-admin-page .abovewp-success-text {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.abovewp-admin-page .abovewp-migration-controls {
+  background: rgba(255,255,255,0.05);
+  padding: 30px;
+  border: 1px solid #4A5C75;
+  border-radius: 6px;
+  margin: 20px 0;
+}
+
+.abovewp-admin-page .abovewp-migration-controls-title {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+  font-size: 20px;
+}
+
+.abovewp-admin-page .abovewp-migration-controls-title .dashicons {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abovewp-admin-page .abovewp-migration-controls-text {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.abovewp-admin-page .abovewp-migration-controls-buttons {
+  margin-top: 20px;
+}
+
+.abovewp-admin-page .button .dashicons {
+  vertical-align: middle;
+  margin-right: 5px;
+  text-decoration: none;
+}
+
+.abovewp-admin-page a.button:hover .dashicons {
+  text-decoration: none;
+}
+
+/* Admin notice styling */
+.abovewp-migration-notice {
+  border-left-color: #00a0d2;
 } 

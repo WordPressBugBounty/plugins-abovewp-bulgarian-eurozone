@@ -1,16 +1,16 @@
 <?php
 /**
  * Plugin Name: AboveWP Bulgarian Eurozone
- * Description: Adds dual currency display (BGN and EUR) for WooCommerce as Bulgaria prepares to join the Eurozone
- * Version: 1.2.4
+ * Description: Adds bidirectional dual currency display (BGN ⇄ EUR) for WooCommerce as Bulgaria prepares to join the Eurozone
+ * Version: 2.2.0
  * Author: AboveWP
  * Author URI: https://abovewp.com
  * Text Domain: abovewp-bulgarian-eurozone
  * Domain Path: /languages
  * Requires at least: 5.0
- * Requires PHP: 7.2
+ * Requires PHP: 7.4
  * WC requires at least: 5.0
- * WC tested up to: 9.8
+ * WC tested up to: 10.4
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
@@ -21,7 +21,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('ABOVEWP_BGE_VERSION', '1.2.4');
+define('ABOVEWP_BGE_VERSION', '2.1.1');
 define('ABOVEWP_BGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ABOVEWP_BGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -80,8 +80,9 @@ class AboveWP_Bulgarian_Eurozone {
         // Add plugin card to AboveWP dashboard
         add_action('abovewp_admin_dashboard_plugins', array($this, 'display_plugin_card'));
 
-        // Only proceed if dual currency display is enabled and currency is BGN
-        if (get_option('abovewp_bge_enabled', 'yes') !== 'yes' || !$this->is_site_currency_bgn()) {
+        // Only proceed if dual currency display is enabled and should be displayed
+        // (BGN stores always show EUR, EUR stores only show BGN on Bulgarian locale)
+        if (get_option('abovewp_bge_enabled', 'yes') !== 'yes' || !$this->should_display_dual_currency()) {
             return;
         }
 
@@ -90,6 +91,11 @@ class AboveWP_Bulgarian_Eurozone {
 
         // Add plugin action links
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'plugin_action_links'));
+
+        // Add admin notice for currency migration
+        if ($this->is_site_currency_bgn()) {
+            add_action('admin_notices', array($this, 'migration_admin_notice'));
+        }
 
         // Enqueue styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'));
@@ -118,6 +124,83 @@ class AboveWP_Bulgarian_Eurozone {
     }
 
     /**
+     * Check if site currency is set to EUR
+     *
+     * @return bool
+     */
+    private function is_site_currency_eur() {
+        if (!function_exists('get_woocommerce_currency')) {
+            return false;
+        }
+        
+        return get_woocommerce_currency() === 'EUR';
+    }
+
+    /**
+     * Check if site currency is supported (BGN or EUR)
+     *
+     * @return bool
+     */
+    private function is_site_currency_supported() {
+        return $this->is_site_currency_bgn() || $this->is_site_currency_eur();
+    }
+
+    /**
+     * Check if dual currency display should be active
+     * For BGN stores: always show EUR (everyone should see the EUR equivalent)
+     * For EUR stores: only show BGN on Bulgarian locale (for multilang/multicurrency compatibility)
+     *
+     * @return bool
+     */
+    private function should_display_dual_currency() {
+        if (!$this->is_site_currency_supported()) {
+            return false;
+        }
+        
+        // For BGN stores, always show EUR equivalent
+        if ($this->is_site_currency_bgn()) {
+            return true;
+        }
+        
+        // For EUR stores, only show BGN equivalent on Bulgarian locale
+        if ($this->is_site_currency_eur()) {
+            $locale = get_locale();
+            // Check for Bulgarian locale (bg_BG or just bg)
+            return strpos($locale, 'bg') === 0;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Get the primary currency (the one set in WooCommerce)
+     *
+     * @return string 'BGN' or 'EUR' or empty string if not supported
+     */
+    private function get_primary_currency() {
+        if ($this->is_site_currency_bgn()) {
+            return 'BGN';
+        } elseif ($this->is_site_currency_eur()) {
+            return 'EUR';
+        }
+        return '';
+    }
+
+    /**
+     * Get the secondary currency (the one to display alongside primary)
+     *
+     * @return string 'EUR' or 'BGN' or empty string if not supported
+     */
+    private function get_secondary_currency() {
+        if ($this->is_site_currency_bgn()) {
+            return 'EUR';
+        } elseif ($this->is_site_currency_eur()) {
+            return 'BGN';
+        }
+        return '';
+    }
+
+    /**
      * Show admin notice if WooCommerce is not active
      */
     public function woocommerce_missing_notice() {
@@ -125,6 +208,54 @@ class AboveWP_Bulgarian_Eurozone {
         <div class="error">
             <p><?php esc_html_e('AboveWP Bulgarian Eurozone requires WooCommerce to be installed and active.', 'abovewp-bulgarian-eurozone'); ?></p>
         </div>
+        <?php
+    }
+
+    /**
+     * Show admin notice for currency migration
+     */
+    public function migration_admin_notice() {
+        // Don't show on our own pages
+        $screen = get_current_screen();
+        if (isset($screen->id) && (
+            strpos($screen->id, 'abovewp-bulgarian-eurozone') !== false || 
+            strpos($screen->id, 'abovewp-currency-migration') !== false
+        )) {
+            return;
+        }
+
+        // Check if user has dismissed the notice
+        $dismissed = get_user_meta(get_current_user_id(), 'abovewp_migration_notice_dismissed', true);
+        if ($dismissed) {
+            return;
+        }
+
+        ?>
+        <div class="notice notice-info is-dismissible abovewp-migration-notice">
+            <p>
+                <strong><?php esc_html_e('Ready for Bulgaria\'s Eurozone Transition?', 'abovewp-bulgarian-eurozone'); ?></strong><br>
+                <?php esc_html_e('Use our Currency Migration tool to automatically convert all your product prices from BGN to EUR using the official rate.', 'abovewp-bulgarian-eurozone'); ?>
+            </p>
+            <p>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-currency-migration')); ?>" class="button button-primary">
+                    <?php esc_html_e('Start Migration', 'abovewp-bulgarian-eurozone'); ?>
+                </a>
+            </p>
+        </div>
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $(document).on('click', '.abovewp-migration-notice .notice-dismiss', function() {
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'abovewp_dismiss_migration_notice',
+                        nonce: '<?php echo wp_create_nonce('abovewp_dismiss_notice'); ?>'
+                    }
+                });
+            });
+        });
+        </script>
         <?php
     }
 
@@ -216,16 +347,32 @@ class AboveWP_Bulgarian_Eurozone {
             add_filter('woocommerce_get_order_item_totals', array($this, 'add_eur_to_order_totals'), 10, 3);
         }
         
+        // Fix legacy BGN orders displaying with wrong currency after migration to EUR
+        if ($this->is_site_currency_eur()) {
+            add_filter('woocommerce_order_formatted_line_subtotal', array($this, 'fix_legacy_order_line_subtotal'), 5, 3);
+            add_filter('woocommerce_get_formatted_order_total', array($this, 'fix_legacy_order_total'), 5, 2);
+            add_filter('woocommerce_order_subtotal_to_display', array($this, 'fix_legacy_order_subtotal_display'), 5, 3);
+            add_filter('woocommerce_order_shipping_to_display', array($this, 'fix_legacy_order_shipping_display'), 5, 3);
+            add_filter('woocommerce_order_discount_to_display', array($this, 'fix_legacy_order_discount_display'), 5, 2);
+        }
+        
         // Enqueue JavaScript for Blocks
         add_action('wp_enqueue_scripts', array($this, 'enqueue_blocks_scripts'));
+        
+        // AJAX handlers for currency migration
+        add_action('wp_ajax_abovewp_get_product_count', array($this, 'ajax_get_product_count'));
+        add_action('wp_ajax_abovewp_migrate_products', array($this, 'ajax_migrate_products'));
+        add_action('wp_ajax_abovewp_finalize_migration', array($this, 'ajax_finalize_migration'));
+        add_action('wp_ajax_abovewp_reset_migration', array($this, 'ajax_reset_migration'));
+        add_action('wp_ajax_abovewp_dismiss_migration_notice', array($this, 'ajax_dismiss_migration_notice'));
     }
 
     /**
      * Enqueue admin styles
      */
     public function enqueue_admin_styles($hook) {
-        // Only load on our plugin's admin page
-        if (strpos($hook, 'abovewp-bulgarian-eurozone') !== false) {
+        // Load on our plugin's admin pages
+        if (strpos($hook, 'abovewp-bulgarian-eurozone') !== false || strpos($hook, 'abovewp-currency-migration') !== false) {
             wp_enqueue_style(
                 'abovewp-admin-default',
                 ABOVEWP_BGE_PLUGIN_URL . 'assets/css/admin-page-default.css',
@@ -259,6 +406,18 @@ class AboveWP_Bulgarian_Eurozone {
             'abovewp-bulgarian-eurozone',
             array($this, 'settings_page')
         );
+        
+        // Add currency migration page only if currency is BGN
+        if ($this->is_site_currency_bgn()) {
+            add_submenu_page(
+                'abovewp',
+                __('Currency Migration', 'abovewp-bulgarian-eurozone'),
+                __('Currency Migration', 'abovewp-bulgarian-eurozone'),
+                'manage_options',
+                'abovewp-currency-migration',
+                array($this, 'migration_page')
+            );
+        }
     }
 
     /**
@@ -280,18 +439,6 @@ class AboveWP_Bulgarian_Eurozone {
         );
         
 
-        
-        // EUR label setting
-        register_setting(
-            'abovewp_bge_settings',   // Option group
-            'abovewp_bge_eur_label',   // Option name
-            array(                     // Args
-                'type' => 'string',
-                'sanitize_callback' => 'sanitize_text_field',
-                'default' => '€',
-                'description' => 'EUR price label'
-            )
-        );
         
         // EUR price position setting
         register_setting(
@@ -320,7 +467,20 @@ class AboveWP_Bulgarian_Eurozone {
                 'description' => 'EUR price display format (brackets or side divider)'
             )
         );
-        
+
+        register_setting(
+            'abovewp_bge_settings',
+            'abovewp_bge_bgn_rounding',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => function($value) {
+                    return in_array($value, array('exact', 'smart')) ? $value : 'smart';
+                },
+                'default' => 'smart',
+                'description' => 'BGN price rounding (exact decimals or smart rounding)'
+            )
+        );
+
         // Display location settings (checkboxes)
         $display_locations = array(
             'single_product' => esc_html__('Single product pages', 'abovewp-bulgarian-eurozone'),
@@ -365,15 +525,43 @@ class AboveWP_Bulgarian_Eurozone {
             </div>
             <h1><?php esc_html_e('Bulgarian Eurozone Settings', 'abovewp-bulgarian-eurozone'); ?></h1>
             
-            <?php if (!$this->is_site_currency_bgn()): ?>
-            <div class="notice notice-error">
+            <?php if ($this->is_site_currency_bgn()): ?>
+            <div class="abovewp-currency-notice">
+                <div class="abovewp-currency-notice-content">
+                    <span class="dashicons dashicons-info"></span>
+                    <div>
+                        <p class="abovewp-currency-notice-text">
+                            <strong><?php esc_html_e('Your store is currently using Bulgarian Lev (BGN) as the primary currency.', 'abovewp-bulgarian-eurozone'); ?></strong>
+                        </p>
+                        <p class="abovewp-currency-notice-text">
+                            <?php esc_html_e('When Bulgaria joins the Eurozone, you can use our Currency Migration tool to seamlessly convert all prices to EUR.', 'abovewp-bulgarian-eurozone'); ?>
+                        </p>
+                    </div>
+                </div>
+                <p class="abovewp-currency-notice-actions">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-currency-migration')); ?>" class="button button-primary">
+                        <span class="dashicons dashicons-migrate"></span>
+                        <?php esc_html_e('Currency Migration Tool', 'abovewp-bulgarian-eurozone'); ?>
+                    </a>
+                </p>
+            </div>
+            <?php endif; ?>
+            
+            <?php if (!$this->is_site_currency_supported()): ?>
+            <div class="abovewp-error-box">
                 <p>
-                    <?php esc_html_e('This plugin requires your WooCommerce currency to be set to Bulgarian Lev (BGN). The dual currency display will not work until you change your store currency to BGN.', 'abovewp-bulgarian-eurozone'); ?>
+                    <?php esc_html_e('This plugin requires your WooCommerce currency to be set to either Bulgarian Lev (BGN) or Euro (EUR). The dual currency display will not work until you change your store currency to BGN or EUR.', 'abovewp-bulgarian-eurozone'); ?>
                 </p>
                 <p>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=general')); ?>" class="button button-secondary">
                         <?php esc_html_e('Change Currency Settings', 'abovewp-bulgarian-eurozone'); ?>
                     </a>
+                </p>
+            </div>
+            <?php elseif ($this->is_site_currency_eur()): ?>
+            <div class="abovewp-info-box">
+                <p>
+                    <?php esc_html_e('Your store currency is set to EUR. Bulgarian Lev (BGN) prices will be displayed alongside EUR prices.', 'abovewp-bulgarian-eurozone'); ?>
                 </p>
             </div>
             <?php endif; ?>
@@ -387,48 +575,69 @@ class AboveWP_Bulgarian_Eurozone {
                     <tr valign="top">
                         <th scope="row"><?php esc_html_e('Enable Dual Currency Display', 'abovewp-bulgarian-eurozone'); ?></th>
                         <td>
-                            <select name="abovewp_bge_enabled" <?php disabled(!$this->is_site_currency_bgn()); ?>>
+                            <select name="abovewp_bge_enabled" <?php disabled(!$this->is_site_currency_supported()); ?>>
                                 <option value="yes" <?php selected(get_option('abovewp_bge_enabled', 'yes'), 'yes'); ?>><?php esc_html_e('Yes', 'abovewp-bulgarian-eurozone'); ?></option>
                                 <option value="no" <?php selected(get_option('abovewp_bge_enabled', 'yes'), 'no'); ?>><?php esc_html_e('No', 'abovewp-bulgarian-eurozone'); ?></option>
                             </select>
-                            <?php if (!$this->is_site_currency_bgn()): ?>
-                                <p class="description"><?php esc_html_e('Dual currency display is only available when your store currency is BGN.', 'abovewp-bulgarian-eurozone'); ?></p>
+                            <?php if (!$this->is_site_currency_supported()): ?>
+                                <p class="description"><?php esc_html_e('Dual currency display is only available when your store currency is BGN or EUR.', 'abovewp-bulgarian-eurozone'); ?></p>
                             <?php endif; ?>
                         </td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row"><?php esc_html_e('EUR Price Label', 'abovewp-bulgarian-eurozone'); ?></th>
+                        <th scope="row"><?php esc_html_e('Secondary Currency Position', 'abovewp-bulgarian-eurozone'); ?></th>
                         <td>
-                            <input type="text" name="abovewp_bge_eur_label" value="<?php echo esc_attr(get_option('abovewp_bge_eur_label', '€')); ?>" <?php disabled(!$this->is_site_currency_bgn()); ?> />
-                            <p class="description"><?php esc_html_e('The label to use for EUR prices (default: €)', 'abovewp-bulgarian-eurozone'); ?></p>
+                            <select name="abovewp_bge_eur_position" <?php disabled(!$this->is_site_currency_supported()); ?>>
+                                <option value="right" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'right'); ?>><?php esc_html_e('Right of primary price', 'abovewp-bulgarian-eurozone'); ?></option>
+                                <option value="left" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'left'); ?>><?php esc_html_e('Left of primary price', 'abovewp-bulgarian-eurozone'); ?></option>
+                            </select>
+                            <p class="description"><?php esc_html_e('Choose whether secondary currency appears on the left or right of primary currency', 'abovewp-bulgarian-eurozone'); ?></p>
                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row"><?php esc_html_e('EUR Price Position', 'abovewp-bulgarian-eurozone'); ?></th>
+                        <th scope="row"><?php esc_html_e('Secondary Currency Display Format', 'abovewp-bulgarian-eurozone'); ?></th>
                         <td>
-                            <select name="abovewp_bge_eur_position" <?php disabled(!$this->is_site_currency_bgn()); ?>>
-                                <option value="right" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'right'); ?>><?php esc_html_e('Right of BGN price', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <option value="left" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'left'); ?>><?php esc_html_e('Left of BGN price', 'abovewp-bulgarian-eurozone'); ?></option>
+                            <select name="abovewp_bge_eur_format" <?php disabled(!$this->is_site_currency_supported()); ?>>
+                                <?php if ($this->is_site_currency_bgn()): ?>
+                                    <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets (25лв. (12.78 €))', 'abovewp-bulgarian-eurozone'); ?></option>
+                                    <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider (25лв. / 12.78 €)', 'abovewp-bulgarian-eurozone'); ?></option>
+                                <?php elseif ($this->is_site_currency_eur()): ?>
+                                    <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets (12.78 € (25лв.))', 'abovewp-bulgarian-eurozone'); ?></option>
+                                    <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider (12.78 € / 25лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
+                                <?php else: ?>
+                                    <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets', 'abovewp-bulgarian-eurozone'); ?></option>
+                                    <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider', 'abovewp-bulgarian-eurozone'); ?></option>
+                                <?php endif; ?>
                             </select>
-                            <p class="description"><?php esc_html_e('Choose whether EUR prices appear on the left or right of BGN prices', 'abovewp-bulgarian-eurozone'); ?></p>
+                            <p class="description"><?php esc_html_e('Choose how secondary currency is displayed relative to primary currency', 'abovewp-bulgarian-eurozone'); ?></p>
                         </td>
                     </tr>
+                    <?php if ($this->is_site_currency_eur()): ?>
                     <tr valign="top">
-                        <th scope="row"><?php esc_html_e('EUR Price Display Format', 'abovewp-bulgarian-eurozone'); ?></th>
+                        <th scope="row"><?php esc_html_e('BGN Price Rounding', 'abovewp-bulgarian-eurozone'); ?></th>
                         <td>
-                            <select name="abovewp_bge_eur_format" <?php disabled(!$this->is_site_currency_bgn()); ?>>
-                                <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets (25лв. (12.78 €))', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider (25лв. / 12.78 €)', 'abovewp-bulgarian-eurozone'); ?></option>
+                            <select name="abovewp_bge_bgn_rounding">
+                                <option value="exact" <?php selected(get_option('abovewp_bge_bgn_rounding', 'smart'), 'exact'); ?>><?php esc_html_e('Keep exact decimals (e.g., 19.99 лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
+                                <option value="smart" <?php selected(get_option('abovewp_bge_bgn_rounding', 'smart'), 'smart'); ?>><?php esc_html_e('Round to exact decimal (e.g., 19.91 → 19.90 лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
                             </select>
-                            <p class="description"><?php esc_html_e('Choose how EUR prices are displayed relative to BGN prices', 'abovewp-bulgarian-eurozone'); ?></p>
+                            <p class="description"><?php esc_html_e('When the converted BGN price is within 0.015 of an exact decimal (e.g., 19.91 vs 19.90), choose whether to keep the calculated value or round to the nearest decimal.', 'abovewp-bulgarian-eurozone'); ?></p>
                         </td>
                     </tr>
+                    <?php endif; ?>
                 </table>
                 
-                <?php if ($this->is_site_currency_bgn()): ?>
+                <?php if ($this->is_site_currency_supported()): ?>
                 <h2><?php esc_html_e('Display Locations', 'abovewp-bulgarian-eurozone'); ?></h2>
-                <p class="description"><?php esc_html_e('Select where you want to display EUR prices:', 'abovewp-bulgarian-eurozone'); ?></p>
+                <p class="description">
+                    <?php 
+                    if ($this->is_site_currency_bgn()) {
+                        esc_html_e('Select where you want to display EUR prices:', 'abovewp-bulgarian-eurozone');
+                    } elseif ($this->is_site_currency_eur()) {
+                        esc_html_e('Select where you want to display BGN prices:', 'abovewp-bulgarian-eurozone');
+                    }
+                    ?>
+                </p>
                 
                 <table class="form-table">
                     <?php
@@ -454,7 +663,15 @@ class AboveWP_Bulgarian_Eurozone {
                         <td>
                             <label>
                                 <input type="checkbox" name="abovewp_bge_show_<?php echo esc_attr($key); ?>" value="yes" <?php checked(get_option('abovewp_bge_show_' . $key, 'yes'), 'yes'); ?> />
-                                <?php esc_html_e('Show EUR price', 'abovewp-bulgarian-eurozone'); ?>
+                                <?php 
+                                if ($this->is_site_currency_bgn()) {
+                                    esc_html_e('Show EUR price', 'abovewp-bulgarian-eurozone');
+                                } elseif ($this->is_site_currency_eur()) {
+                                    esc_html_e('Show BGN price', 'abovewp-bulgarian-eurozone');
+                                } else {
+                                    esc_html_e('Show secondary currency', 'abovewp-bulgarian-eurozone');
+                                }
+                                ?>
                             </label>
                         </td>
                     </tr>
@@ -462,7 +679,7 @@ class AboveWP_Bulgarian_Eurozone {
                 </table>
                 <?php endif; ?>
                 
-                <?php submit_button(null, 'primary', 'submit', true, $this->is_site_currency_bgn() ? [] : ['disabled' => 'disabled']); ?>
+                <?php submit_button(null, 'primary', 'submit', true, $this->is_site_currency_supported() ? [] : ['disabled' => 'disabled']); ?>
             </form>
         </div>
         <?php
@@ -478,6 +695,58 @@ class AboveWP_Bulgarian_Eurozone {
         // Always use the official BGN to EUR conversion rate
         $price_eur = $price_bgn / $this->conversion_rate;
         return round($price_eur, 2);
+    }
+
+    /**
+     * Convert EUR to BGN
+     *
+     * Rounding behavior depends on the 'abovewp_bge_bgn_rounding' setting:
+     * - 'exact': Keep exact decimals (19.99 stays 19.99)
+     * - 'smart': Round to nearest whole number if close (19.99 → 20.00)
+     *
+     * @param float $price_eur
+     * @return float
+     */
+    public function convert_eur_to_bgn($price_eur) {
+        $price_bgn_raw = $price_eur * $this->conversion_rate;
+
+        $rounding = get_option('abovewp_bge_bgn_rounding', 'smart');
+
+        $price_bgn = round($price_bgn_raw, 2);
+
+        if ($rounding === 'smart') {
+            $nearest_int = round($price_bgn);
+            if (abs($price_bgn - $nearest_int) < 0.015) {
+                $price_bgn = $nearest_int;
+            }
+        }
+        
+        /**
+         * Filter the converted BGN price from EUR
+         * 
+         * Allows developers to customize the rounding logic for EUR to BGN conversion.
+         *
+         * @since 2.0.3
+         * @param float $price_bgn The rounded BGN price (after smart rounding)
+         * @param float $price_eur The original EUR price (input)
+         * @param float $price_bgn_raw The raw unrounded BGN price (before rounding)
+         */
+        return apply_filters('abovewp_bge_convert_eur_to_bgn', $price_bgn, $price_eur, $price_bgn_raw);
+    }
+
+    /**
+     * Convert price from primary to secondary currency
+     *
+     * @param float $price
+     * @return float
+     */
+    private function convert_to_secondary_currency($price) {
+        if ($this->is_site_currency_bgn()) {
+            return $this->convert_bgn_to_eur($price);
+        } elseif ($this->is_site_currency_eur()) {
+            return $this->convert_eur_to_bgn($price);
+        }
+        return $price;
     }
 
     /**
@@ -519,12 +788,35 @@ class AboveWP_Bulgarian_Eurozone {
     }
 
     /**
-     * Get EUR label from settings
+     * Get EUR label (always €)
      *
      * @return string
      */
     private function get_eur_label() {
-        return esc_html(get_option('abovewp_bge_eur_label', '€'));
+        return '€';
+    }
+
+    /**
+     * Get BGN label
+     *
+     * @return string
+     */
+    private function get_bgn_label() {
+        return 'лв.';
+    }
+
+    /**
+     * Get secondary currency label (EUR when primary is BGN, BGN when primary is EUR)
+     *
+     * @return string
+     */
+    private function get_secondary_currency_label() {
+        if ($this->is_site_currency_bgn()) {
+            return $this->get_eur_label();
+        } elseif ($this->is_site_currency_eur()) {
+            return $this->get_bgn_label();
+        }
+        return '';
     }
 
     /**
@@ -538,42 +830,70 @@ class AboveWP_Bulgarian_Eurozone {
     }
 
     /**
+     * Format BGN price with label
+     *
+     * @param float $price_bgn
+     * @return string
+     */
+    private function format_bgn_price($price_bgn) {
+        return number_format($price_bgn, 2) . ' ' . $this->get_bgn_label();
+    }
+
+    /**
+     * Format secondary currency price with label
+     *
+     * @param float $price
+     * @return string
+     */
+    private function format_secondary_price($price) {
+        return number_format($price, 2) . ' ' . $this->get_secondary_currency_label();
+    }
+
+    /**
      * Format dual currency price based on position setting
      *
-     * @param string $bgn_price_html The original BGN price HTML
-     * @param float $eur_price The EUR price amount
-     * @param string $css_class Optional CSS class for EUR price span
+     * @param string $primary_price_html The original primary currency price HTML
+     * @param float $secondary_price The secondary currency price amount
+     * @param string $css_class Optional CSS class for secondary price span
      * @return string The formatted dual currency price
      */
-    private function format_dual_price($bgn_price_html, $eur_price, $css_class = 'eur-price') {
-        $eur_formatted = $this->format_eur_price($eur_price);
+    private function format_dual_price($primary_price_html, $secondary_price, $css_class = 'eur-price') {
+        $secondary_formatted = $this->format_secondary_price($secondary_price);
         $format = get_option('abovewp_bge_eur_format', 'brackets');
         $position = get_option('abovewp_bge_eur_position', 'right');
         
         if ($format === 'divider') {
-            // Side divider format: "25лв. / 12.78 €"
-            $eur_span = '<span class="' . esc_attr($css_class) . '">/ ' . esc_html($eur_formatted) . '</span>';
+            // Side divider format: "25лв. / 12.78 €" or "12.78 € / 25лв."
+            $secondary_span = '<span class="' . esc_attr($css_class) . '">/ ' . esc_html($secondary_formatted) . '</span>';
         } else {
-            // Brackets format: "25лв. (12.78 €)"
-            $eur_span = '<span class="' . esc_attr($css_class) . '">(' . esc_html($eur_formatted) . ')</span>';
+            // Brackets format: "25лв. (12.78 €)" or "12.78 € (25лв.)"
+            $secondary_span = '<span class="' . esc_attr($css_class) . '">(' . esc_html($secondary_formatted) . ')</span>';
         }
         
         if ($position === 'left') {
-            return $eur_span . ' ' . $bgn_price_html;
+            return $secondary_span . ' ' . $primary_price_html;
         } else {
-            return $bgn_price_html . ' ' . $eur_span;
+            return $primary_price_html . ' ' . $secondary_span;
         }
     }
 
     /**
-     * Add EUR conversion to inline tax display within includes_tax elements
+     * Add secondary currency conversion to inline tax display within includes_tax elements
      *
      * @param string $html The HTML containing potential includes_tax elements
-     * @return string Modified HTML with EUR tax amounts added
+     * @return string Modified HTML with secondary currency tax amounts added
      */
     private function add_eur_to_inline_tax_display($html) {
-        // Check if the HTML contains includes_tax class and BGN currency symbol
-        if (strpos($html, 'includes_tax') === false || strpos($html, 'лв.') === false) {
+        // Check if the HTML contains includes_tax class
+        if (strpos($html, 'includes_tax') === false) {
+            return $html;
+        }
+        
+        // Check for primary currency symbol
+        $primary_currency = $this->get_primary_currency();
+        if ($primary_currency === 'BGN' && strpos($html, 'лв.') === false) {
+            return $html;
+        } elseif ($primary_currency === 'EUR' && strpos($html, '€') === false) {
             return $html;
         }
         
@@ -587,73 +907,105 @@ class AboveWP_Bulgarian_Eurozone {
      * Callback function to replace tax amounts within includes_tax elements
      *
      * @param array $matches Regex matches
-     * @return string Modified small element with EUR tax amounts
+     * @return string Modified small element with secondary currency tax amounts
      */
     private function replace_inline_tax_amounts($matches) {
         $tax_content = $matches[1];
+        $primary_currency = $this->get_primary_currency();
+        $format = get_option('abovewp_bge_eur_format', 'brackets');
         
-        // Find all BGN price amounts within the tax content
-        // Look for patterns like "8.32&nbsp;<span class="woocommerce-Price-currencySymbol">лв.</span>"
-        $price_pattern = '/(\d+(?:\.\d{2})?)\s*(?:&nbsp;)?<span[^>]*class="[^"]*woocommerce-Price-currencySymbol[^"]*"[^>]*>лв\.<\/span>/';
-        
-        $modified_content = preg_replace_callback($price_pattern, function($price_matches) {
-            $bgn_amount = floatval($price_matches[1]);
-            $eur_amount = $this->convert_bgn_to_eur($bgn_amount);
-            $eur_formatted = number_format($eur_amount, 2);
+        if ($primary_currency === 'BGN') {
+            // Find all BGN price amounts within the tax content
+            // Look for patterns like "8.32&nbsp;<span class="woocommerce-Price-currencySymbol">лв.</span>"
+            $price_pattern = '/(\d+(?:\.\d{2})?)\s*(?:&nbsp;)?<span[^>]*class="[^"]*woocommerce-Price-currencySymbol[^"]*"[^>]*>лв\.<\/span>/';
             
-            // Return the original BGN amount plus EUR equivalent
-            $format = get_option('abovewp_bge_eur_format', 'brackets');
-            if ($format === 'divider') {
-                return $price_matches[0] . ' / ' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label());
-            } else {
-                return $price_matches[0] . ' (' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label()) . ')';
-            }
-        }, $tax_content);
-        
-        // Also handle simpler patterns like "8.32 лв." without spans
-        $simple_pattern = '/(\d+(?:\.\d{2})?)\s*лв\./';
-        $modified_content = preg_replace_callback($simple_pattern, function($price_matches) {
-            $bgn_amount = floatval($price_matches[1]);
-            $eur_amount = $this->convert_bgn_to_eur($bgn_amount);
-            $eur_formatted = number_format($eur_amount, 2);
+            $modified_content = preg_replace_callback($price_pattern, function($price_matches) use ($format) {
+                $bgn_amount = floatval($price_matches[1]);
+                $eur_amount = $this->convert_bgn_to_eur($bgn_amount);
+                $eur_formatted = number_format($eur_amount, 2);
+                
+                if ($format === 'divider') {
+                    return $price_matches[0] . ' / ' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label());
+                } else {
+                    return $price_matches[0] . ' (' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label()) . ')';
+                }
+            }, $tax_content);
             
-            // Return the original BGN amount plus EUR equivalent
-            $format = get_option('abovewp_bge_eur_format', 'brackets');
-            if ($format === 'divider') {
-                return $price_matches[0] . ' / ' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label());
-            } else {
-                return $price_matches[0] . ' (' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label()) . ')';
-            }
-        }, $modified_content);
+            // Also handle simpler patterns like "8.32 лв." without spans
+            $simple_pattern = '/(\d+(?:\.\d{2})?)\s*лв\./';
+            $modified_content = preg_replace_callback($simple_pattern, function($price_matches) use ($format) {
+                $bgn_amount = floatval($price_matches[1]);
+                $eur_amount = $this->convert_bgn_to_eur($bgn_amount);
+                $eur_formatted = number_format($eur_amount, 2);
+                
+                if ($format === 'divider') {
+                    return $price_matches[0] . ' / ' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label());
+                } else {
+                    return $price_matches[0] . ' (' . esc_html($eur_formatted) . ' ' . esc_html($this->get_eur_label()) . ')';
+                }
+            }, $modified_content);
+        } elseif ($primary_currency === 'EUR') {
+            // Find all EUR price amounts within the tax content
+            // Look for patterns like "8.32&nbsp;<span class="woocommerce-Price-currencySymbol">€</span>"
+            $price_pattern = '/(\d+(?:\.\d{2})?)\s*(?:&nbsp;)?<span[^>]*class="[^"]*woocommerce-Price-currencySymbol[^"]*"[^>]*>€<\/span>/';
+            
+            $modified_content = preg_replace_callback($price_pattern, function($price_matches) use ($format) {
+                $eur_amount = floatval($price_matches[1]);
+                $bgn_amount = $this->convert_eur_to_bgn($eur_amount);
+                $bgn_formatted = number_format($bgn_amount, 2);
+                
+                if ($format === 'divider') {
+                    return $price_matches[0] . ' / ' . esc_html($bgn_formatted) . ' ' . esc_html($this->get_bgn_label());
+                } else {
+                    return $price_matches[0] . ' (' . esc_html($bgn_formatted) . ' ' . esc_html($this->get_bgn_label()) . ')';
+                }
+            }, $tax_content);
+            
+            // Also handle simpler patterns like "8.32 €" without spans
+            $simple_pattern = '/(\d+(?:\.\d{2})?)\s*€/';
+            $modified_content = preg_replace_callback($simple_pattern, function($price_matches) use ($format) {
+                $eur_amount = floatval($price_matches[1]);
+                $bgn_amount = $this->convert_eur_to_bgn($eur_amount);
+                $bgn_formatted = number_format($bgn_amount, 2);
+                
+                if ($format === 'divider') {
+                    return $price_matches[0] . ' / ' . esc_html($bgn_formatted) . ' ' . esc_html($this->get_bgn_label());
+                } else {
+                    return $price_matches[0] . ' (' . esc_html($bgn_formatted) . ' ' . esc_html($this->get_bgn_label()) . ')';
+                }
+            }, $modified_content);
+        } else {
+            $modified_content = $tax_content;
+        }
         
         return '<small' . substr($matches[0], 6, strpos($matches[0], '>') - 6) . '>' . $modified_content . '</small>';
     }
 
     /**
-     * Add EUR price to existing value based on position setting
+     * Add secondary currency price to existing value based on position setting
      *
      * @param string $existing_value The existing price value
-     * @param float $eur_price The EUR price amount
-     * @param string $css_class Optional CSS class for EUR price span
-     * @return string The modified value with EUR price added
+     * @param float $secondary_price The secondary currency price amount
+     * @param string $css_class Optional CSS class for secondary price span
+     * @return string The modified value with secondary currency price added
      */
-    private function add_eur_to_value($existing_value, $eur_price, $css_class = 'eur-price') {
-        $eur_formatted = $this->format_eur_price($eur_price);
+    private function add_eur_to_value($existing_value, $secondary_price, $css_class = 'eur-price') {
+        $secondary_formatted = $this->format_secondary_price($secondary_price);
         $format = get_option('abovewp_bge_eur_format', 'brackets');
         $position = get_option('abovewp_bge_eur_position', 'right');
         
         if ($format === 'divider') {
-            // Side divider format: "25лв. / 12.78 €"
-            $eur_span = '<span class="' . esc_attr($css_class) . '">/ ' . esc_html($eur_formatted) . '</span>';
+            // Side divider format: "25лв. / 12.78 €" or "12.78 € / 25лв."
+            $secondary_span = '<span class="' . esc_attr($css_class) . '">/ ' . esc_html($secondary_formatted) . '</span>';
         } else {
-            // Brackets format: "25лв. (12.78 €)"
-            $eur_span = '<span class="' . esc_attr($css_class) . '">(' . esc_html($eur_formatted) . ')</span>';
+            // Brackets format: "25лв. (12.78 €)" or "12.78 € (25лв.)"
+            $secondary_span = '<span class="' . esc_attr($css_class) . '">(' . esc_html($secondary_formatted) . ')</span>';
         }
         
         if ($position === 'left') {
-            return $eur_span . ' ' . $existing_value;
+            return $secondary_span . ' ' . $existing_value;
         } else {
-            return $existing_value . ' ' . $eur_span;
+            return $existing_value . ' ' . $secondary_span;
         }
     }
 
@@ -675,15 +1027,15 @@ class AboveWP_Bulgarian_Eurozone {
         }
 
         if ($product->is_on_sale()) {
-            $regular_price_bgn = wc_get_price_to_display($product, array('price' => $product->get_regular_price()));
-            $sale_price_bgn = wc_get_price_to_display($product, array('price' => $product->get_sale_price()));
+            $regular_price_primary = wc_get_price_to_display($product, array('price' => $product->get_regular_price()));
+            $sale_price_primary = wc_get_price_to_display($product, array('price' => $product->get_sale_price()));
             
-            // Convert to EUR
-            $regular_price_eur = $this->convert_bgn_to_eur($regular_price_bgn);
-            $sale_price_eur = $this->convert_bgn_to_eur($sale_price_bgn);
+            // Convert to secondary currency
+            $regular_price_secondary = $this->convert_to_secondary_currency($regular_price_primary);
+            $sale_price_secondary = $this->convert_to_secondary_currency($sale_price_primary);
             
-            $regular_price_dual = $this->format_dual_price(wc_price($regular_price_bgn), $regular_price_eur);
-            $sale_price_dual = $this->format_dual_price(wc_price($sale_price_bgn), $sale_price_eur);
+            $regular_price_dual = $this->format_dual_price(wc_price($regular_price_primary), $regular_price_secondary);
+            $sale_price_dual = $this->format_dual_price(wc_price($sale_price_primary), $sale_price_secondary);
             
             // Use WooCommerce's built-in sale price formatting
             $price_html = wc_format_sale_price($regular_price_dual, $sale_price_dual);
@@ -692,10 +1044,10 @@ class AboveWP_Bulgarian_Eurozone {
         }
         
         // Use WooCommerce function that respects tax display settings
-        $price_bgn = wc_get_price_to_display($product);
-        $price_eur = $this->convert_bgn_to_eur($price_bgn);
+        $price_primary = wc_get_price_to_display($product);
+        $price_secondary = $this->convert_to_secondary_currency($price_primary);
         
-        return $this->format_dual_price($price_html, $price_eur);
+        return $this->format_dual_price($price_html, $price_secondary);
     }
 
     /**
@@ -710,41 +1062,41 @@ class AboveWP_Bulgarian_Eurozone {
         $tax_display_mode = get_option('woocommerce_tax_display_shop');
         
         if ('incl' === $tax_display_mode) {
-            $min_price_bgn = $product->get_variation_price('min', true); // true = include taxes
-            $max_price_bgn = $product->get_variation_price('max', true);
+            $min_price_primary = $product->get_variation_price('min', true); // true = include taxes
+            $max_price_primary = $product->get_variation_price('max', true);
         } else {
-            $min_price_bgn = $product->get_variation_price('min', false); // false = exclude taxes
-            $max_price_bgn = $product->get_variation_price('max', false);
+            $min_price_primary = $product->get_variation_price('min', false); // false = exclude taxes
+            $max_price_primary = $product->get_variation_price('max', false);
         }
         
-        // Convert to EUR
-        $min_price_eur = $this->convert_bgn_to_eur($min_price_bgn);
-        $max_price_eur = $this->convert_bgn_to_eur($max_price_bgn);
+        // Convert to secondary currency
+        $min_price_secondary = $this->convert_to_secondary_currency($min_price_primary);
+        $max_price_secondary = $this->convert_to_secondary_currency($max_price_primary);
         
         // If prices are the same, show single price, otherwise show range
-        if ($min_price_bgn === $max_price_bgn) {
-            return $this->format_dual_price($price_html, $min_price_eur);
+        if ($min_price_primary === $max_price_primary) {
+            return $this->format_dual_price($price_html, $min_price_secondary);
         } else {
-            $min_price_formatted = esc_html(number_format($min_price_eur, 2));
-            $max_price_formatted = esc_html(number_format($max_price_eur, 2));
-            $eur_label = esc_html($this->get_eur_label());
-            $eur_range = $min_price_formatted . ' - ' . $max_price_formatted . ' ' . $eur_label;
+            $min_price_formatted = esc_html(number_format($min_price_secondary, 2));
+            $max_price_formatted = esc_html(number_format($max_price_secondary, 2));
+            $secondary_label = esc_html($this->get_secondary_currency_label());
+            $secondary_range = $min_price_formatted . ' - ' . $max_price_formatted . ' ' . $secondary_label;
             
             $format = get_option('abovewp_bge_eur_format', 'brackets');
             $position = get_option('abovewp_bge_eur_position', 'right');
             
             if ($format === 'divider') {
-                // Side divider format: "25лв. / 12.78 €"
-                $eur_span = '<span class="eur-price">/ ' . $eur_range . '</span>';
+                // Side divider format
+                $secondary_span = '<span class="eur-price">/ ' . $secondary_range . '</span>';
             } else {
-                // Brackets format: "25лв. (12.78 €)"
-                $eur_span = '<span class="eur-price">(' . $eur_range . ')</span>';
+                // Brackets format
+                $secondary_span = '<span class="eur-price">(' . $secondary_range . ')</span>';
             }
             
             if ($position === 'left') {
-                return $eur_span . ' ' . $price_html;
+                return $secondary_span . ' ' . $price_html;
             } else {
-                return $price_html . ' ' . $eur_span;
+                return $price_html . ' ' . $secondary_span;
             }
         }
     }
@@ -765,9 +1117,9 @@ class AboveWP_Bulgarian_Eurozone {
             $product_price = wc_get_price_excluding_tax($cart_item['data']);
         }
         
-        $price_eur = $this->convert_bgn_to_eur($product_price);
+        $price_secondary = $this->convert_to_secondary_currency($product_price);
         
-        return $this->format_dual_price($price_html, $price_eur);
+        return $this->format_dual_price($price_html, $price_secondary);
     }
 
     /**
@@ -783,14 +1135,14 @@ class AboveWP_Bulgarian_Eurozone {
         
         // Use WooCommerce cart's tax-aware subtotal calculation
         if (WC()->cart->display_prices_including_tax()) {
-            $subtotal_bgn = wc_get_price_including_tax($cart_item['data'], array('qty' => $quantity));
+            $subtotal_primary = wc_get_price_including_tax($cart_item['data'], array('qty' => $quantity));
         } else {
-            $subtotal_bgn = wc_get_price_excluding_tax($cart_item['data'], array('qty' => $quantity));
+            $subtotal_primary = wc_get_price_excluding_tax($cart_item['data'], array('qty' => $quantity));
         }
         
-        $subtotal_eur = $this->convert_bgn_to_eur($subtotal_bgn);
+        $subtotal_secondary = $this->convert_to_secondary_currency($subtotal_primary);
         
-        return $this->format_dual_price($subtotal, $subtotal_eur);
+        return $this->format_dual_price($subtotal, $subtotal_secondary);
     }
 
     /**
@@ -801,13 +1153,13 @@ class AboveWP_Bulgarian_Eurozone {
      */
     public function display_dual_price_cart_total($total) {
         // Cart total always includes all taxes and fees as displayed
-        $cart_total_bgn = WC()->cart->get_total(false);
-        $cart_total_eur = $this->convert_bgn_to_eur($cart_total_bgn);
+        $cart_total_primary = WC()->cart->get_total(false);
+        $cart_total_secondary = $this->convert_to_secondary_currency($cart_total_primary);
         
         // Handle inline tax display within includes_tax small element
         $total = $this->add_eur_to_inline_tax_display($total);
         
-        return $this->format_dual_price($total, $cart_total_eur);
+        return $this->format_dual_price($total, $cart_total_secondary);
     }
 
     /**
@@ -818,14 +1170,15 @@ class AboveWP_Bulgarian_Eurozone {
      * @return string
      */
     public function display_dual_price_cart_fee($fee_html, $fee) {
-        if (strpos($fee_html, $this->get_eur_label()) !== false) {
+        $secondary_label = $this->get_secondary_currency_label();
+        if (strpos($fee_html, $secondary_label) !== false) {
             return $fee_html;
         }
         
-        $fee_amount_bgn = $fee->amount;
-        if ($fee_amount_bgn > 0) {
-            $fee_amount_eur = $this->convert_bgn_to_eur($fee_amount_bgn);
-            $fee_html = $this->add_eur_to_value($fee_html, $fee_amount_eur);
+        $fee_amount_primary = $fee->amount;
+        if ($fee_amount_primary > 0) {
+            $fee_amount_secondary = $this->convert_to_secondary_currency($fee_amount_primary);
+            $fee_html = $this->add_eur_to_value($fee_html, $fee_amount_secondary);
         }
         
         return $fee_html;
@@ -842,18 +1195,18 @@ class AboveWP_Bulgarian_Eurozone {
     public function display_dual_price_cart_subtotal_total($subtotal, $compound, $cart) {
         // Use cart's display-aware subtotal calculation
         if ($cart->display_prices_including_tax()) {
-            $cart_subtotal_bgn = $cart->get_subtotal() + $cart->get_subtotal_tax();
+            $cart_subtotal_primary = $cart->get_subtotal() + $cart->get_subtotal_tax();
         } else {
-            $cart_subtotal_bgn = $cart->get_subtotal();
+            $cart_subtotal_primary = $cart->get_subtotal();
         }
         
-        $cart_subtotal_eur = $this->convert_bgn_to_eur($cart_subtotal_bgn);
+        $cart_subtotal_secondary = $this->convert_to_secondary_currency($cart_subtotal_primary);
         
-        return $this->format_dual_price($subtotal, $cart_subtotal_eur);
+        return $this->format_dual_price($subtotal, $cart_subtotal_secondary);
     }
 
     /**
-     * Add EUR to order totals
+     * Add secondary currency to order totals
      *
      * @param array $total_rows
      * @param object $order
@@ -866,32 +1219,32 @@ class AboveWP_Bulgarian_Eurozone {
         
         foreach ($total_rows as $key => $row) {
             if ($key === 'cart_subtotal') {
-                // Add EUR to subtotal based on tax display mode
+                // Add secondary currency to subtotal based on tax display mode
                 if ('incl' === $tax_display) {
-                    $subtotal_bgn = $order->get_subtotal() + $order->get_total_tax();
+                    $subtotal_primary = $order->get_subtotal() + $order->get_total_tax();
                 } else {
-                    $subtotal_bgn = $order->get_subtotal();
+                    $subtotal_primary = $order->get_subtotal();
                 }
-                $subtotal_eur = $this->convert_bgn_to_eur($subtotal_bgn);
-                $row['value'] = $this->add_eur_to_value($row['value'], $subtotal_eur);
+                $subtotal_secondary = $this->convert_to_secondary_currency($subtotal_primary);
+                $row['value'] = $this->add_eur_to_value($row['value'], $subtotal_secondary);
             } 
             elseif ($key === 'shipping') {
-                // Add EUR to shipping based on tax display mode
+                // Add secondary currency to shipping based on tax display mode
                 if ('incl' === $tax_display) {
-                    $shipping_total_bgn = $order->get_shipping_total() + $order->get_shipping_tax();
+                    $shipping_total_primary = $order->get_shipping_total() + $order->get_shipping_tax();
                 } else {
-                    $shipping_total_bgn = $order->get_shipping_total();
+                    $shipping_total_primary = $order->get_shipping_total();
                 }
-                if ($shipping_total_bgn > 0 && strpos($row['value'], $this->get_eur_label()) === false) {
-                    $shipping_total_eur = $this->convert_bgn_to_eur($shipping_total_bgn);
-                    $row['value'] = $this->add_eur_to_value($row['value'], $shipping_total_eur);
+                if ($shipping_total_primary > 0 && strpos($row['value'], $this->get_secondary_currency_label()) === false) {
+                    $shipping_total_secondary = $this->convert_to_secondary_currency($shipping_total_primary);
+                    $row['value'] = $this->add_eur_to_value($row['value'], $shipping_total_secondary);
                 }
             }
             elseif ($key === 'tax' || strpos($key, 'tax') === 0) {
-                $tax_total_bgn = $order->get_total_tax();
-                if ($tax_total_bgn > 0) {
-                    $tax_total_eur = $this->convert_bgn_to_eur($tax_total_bgn);
-                    $row['value'] = $this->add_eur_to_value($row['value'], $tax_total_eur);
+                $tax_total_primary = $order->get_total_tax();
+                if ($tax_total_primary > 0) {
+                    $tax_total_secondary = $this->convert_to_secondary_currency($tax_total_primary);
+                    $row['value'] = $this->add_eur_to_value($row['value'], $tax_total_secondary);
                 }
             }
             elseif (strpos($key, 'fee') === 0) {
@@ -902,21 +1255,21 @@ class AboveWP_Bulgarian_Eurozone {
                         $fee_total += $fee->get_total_tax();
                     }
                     if ($fee_total > 0) {
-                        $fee_total_eur = $this->convert_bgn_to_eur($fee_total);
-                        $row['value'] = $this->add_eur_to_value($row['value'], $fee_total_eur);
+                        $fee_total_secondary = $this->convert_to_secondary_currency($fee_total);
+                        $row['value'] = $this->add_eur_to_value($row['value'], $fee_total_secondary);
                         break; // Only process the first fee that matches
                     }
                 }
             }
             elseif ($key === 'order_total') {
-                // Add EUR to order total (total always includes all taxes and fees)
-                $total_bgn = $order->get_total();
-                $total_eur = $this->convert_bgn_to_eur($total_bgn);
+                // Add secondary currency to order total (total always includes all taxes and fees)
+                $total_primary = $order->get_total();
+                $total_secondary = $this->convert_to_secondary_currency($total_primary);
                 
                 // Handle inline tax display within includes_tax small element
                 $row['value'] = $this->add_eur_to_inline_tax_display($row['value']);
                 
-                $row['value'] = $this->add_eur_to_value($row['value'], $total_eur);
+                $row['value'] = $this->add_eur_to_value($row['value'], $total_secondary);
             }
             
             $modified_rows[$key] = $row;
@@ -926,7 +1279,7 @@ class AboveWP_Bulgarian_Eurozone {
     }
 
     /**
-     * Add EUR column to orders table
+     * Add secondary currency column to orders table
      *
      * @param array $columns
      * @return array
@@ -938,8 +1291,8 @@ class AboveWP_Bulgarian_Eurozone {
             $new_columns[$key] = $column;
             
             if ($key === 'order-total') {
-                // Translators: %s is the currency label (EUR)
-                $new_columns['order-total-eur'] = sprintf(esc_html__('Total (%s)', 'abovewp-bulgarian-eurozone'), esc_html($this->get_eur_label()));
+                // Translators: %s is the currency label (EUR or BGN)
+                $new_columns['order-total-eur'] = sprintf(esc_html__('Total (%s)', 'abovewp-bulgarian-eurozone'), esc_html($this->get_secondary_currency_label()));
             }
         }
         
@@ -947,19 +1300,19 @@ class AboveWP_Bulgarian_Eurozone {
     }
 
     /**
-     * Add EUR value to orders table
+     * Add secondary currency value to orders table
      *
      * @param object $order
      */
     public function add_eur_value_to_orders_table($order) {
-        $order_total_bgn = $order->get_total();
-        $order_total_eur = $this->convert_bgn_to_eur($order_total_bgn);
+        $order_total_primary = $order->get_total();
+        $order_total_secondary = $this->convert_to_secondary_currency($order_total_primary);
         
-        echo esc_html($this->format_eur_price($order_total_eur));
+        echo esc_html($this->format_secondary_price($order_total_secondary));
     }
 
     /**
-     * Add EUR price to API responses
+     * Add secondary currency price to API responses
      *
      * @param object $response
      * @param object $post
@@ -973,9 +1326,16 @@ class AboveWP_Bulgarian_Eurozone {
             $product = wc_get_product($data['id']);
             if ($product) {
                 // Use tax-aware price for API responses
-                $price_bgn = wc_get_price_to_display($product);
-                $price_eur = $this->convert_bgn_to_eur($price_bgn);
-                $data['price_eur'] = number_format($price_eur, 2);
+                $price_primary = wc_get_price_to_display($product);
+                $price_secondary = $this->convert_to_secondary_currency($price_primary);
+                
+                // Add both possible fields for backward compatibility
+                if ($this->is_site_currency_bgn()) {
+                    $data['price_eur'] = number_format($price_secondary, 2);
+                } elseif ($this->is_site_currency_eur()) {
+                    $data['price_bgn'] = number_format($price_secondary, 2);
+                }
+                
                 $response->set_data($data);
             }
         }
@@ -984,7 +1344,7 @@ class AboveWP_Bulgarian_Eurozone {
     }
 
     /**
-     * Add EUR to shipping label
+     * Add secondary currency to shipping label
      *
      * @param string $label
      * @param object $method
@@ -992,16 +1352,16 @@ class AboveWP_Bulgarian_Eurozone {
      */
     public function add_eur_to_shipping_label($label, $method) {
         if ($method->cost > 0) {
-            $shipping_cost_bgn = $method->cost;
-            $shipping_cost_eur = $this->convert_bgn_to_eur($shipping_cost_bgn);
-            $label = $this->add_eur_to_value($label, $shipping_cost_eur);
+            $shipping_cost_primary = $method->cost;
+            $shipping_cost_secondary = $this->convert_to_secondary_currency($shipping_cost_primary);
+            $label = $this->add_eur_to_value($label, $shipping_cost_secondary);
         }
         
         return $label;
     }
 
     /**
-     * Add EUR to mini cart
+     * Add secondary currency to mini cart
      *
      * @param string $html
      * @param array $cart_item
@@ -1009,8 +1369,9 @@ class AboveWP_Bulgarian_Eurozone {
      * @return string
      */
     public function add_eur_to_mini_cart($html, $cart_item, $cart_item_key) {
-        // Check if the HTML already contains EUR price to prevent duplicates
-        if (strpos($html, $this->get_eur_label()) !== false || strpos($html, 'eur-price') !== false) {
+        // Check if the HTML already contains secondary currency price to prevent duplicates
+        $secondary_label = $this->get_secondary_currency_label();
+        if (strpos($html, $secondary_label) !== false || strpos($html, 'eur-price') !== false) {
             return $html;
         }
         
@@ -1018,14 +1379,14 @@ class AboveWP_Bulgarian_Eurozone {
         
         // Use WooCommerce cart's tax-aware calculation for mini cart
         if (WC()->cart->display_prices_including_tax()) {
-            $subtotal_bgn = wc_get_price_including_tax($cart_item['data'], array('qty' => $quantity));
+            $subtotal_primary = wc_get_price_including_tax($cart_item['data'], array('qty' => $quantity));
         } else {
-            $subtotal_bgn = wc_get_price_excluding_tax($cart_item['data'], array('qty' => $quantity));
+            $subtotal_primary = wc_get_price_excluding_tax($cart_item['data'], array('qty' => $quantity));
         }
         
-        $subtotal_eur = $this->convert_bgn_to_eur($subtotal_bgn);
+        $subtotal_secondary = $this->convert_to_secondary_currency($subtotal_primary);
         
-        return $this->add_eur_to_value($html, $subtotal_eur);
+        return $this->add_eur_to_value($html, $subtotal_secondary);
     }
 
     /**
@@ -1043,8 +1404,8 @@ class AboveWP_Bulgarian_Eurozone {
             return $discount;
         }
         
-        $discount_eur = $this->convert_bgn_to_eur($discount);
-        $GLOBALS['dual_currency_coupon_eur'] = $discount_eur;
+        $discount_secondary = $this->convert_to_secondary_currency($discount);
+        $GLOBALS['dual_currency_coupon_secondary'] = $discount_secondary;
         
         return $discount;
     }
@@ -1061,9 +1422,9 @@ class AboveWP_Bulgarian_Eurozone {
         $discount_amount = WC()->cart->get_coupon_discount_amount($coupon->get_code(), WC()->cart->display_prices_including_tax());
         
         if ($discount_amount > 0) {
-            $discount_eur = $this->convert_bgn_to_eur($discount_amount);
-            $discount_eur = -$discount_eur;
-            return $this->add_eur_to_value($coupon_html, $discount_eur);
+            $discount_secondary = $this->convert_to_secondary_currency($discount_amount);
+            $discount_secondary = -$discount_secondary;
+            return $this->add_eur_to_value($coupon_html, $discount_secondary);
         }
         
         return $coupon_html;
@@ -1076,11 +1437,318 @@ class AboveWP_Bulgarian_Eurozone {
         ?>
         <div class="aw-admin-dashboard-plugin">
             <h3><?php esc_html_e('Bulgarian Eurozone', 'abovewp-bulgarian-eurozone'); ?></h3>
-            <p><?php esc_html_e('Adds dual currency display (BGN and EUR) for WooCommerce as Bulgaria prepares to join the Eurozone', 'abovewp-bulgarian-eurozone'); ?></p>
+            <p><?php esc_html_e('Adds bidirectional dual currency display (BGN ⇄ EUR) for WooCommerce as Bulgaria prepares to join the Eurozone', 'abovewp-bulgarian-eurozone'); ?></p>
             <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button button-primary">
                 <?php esc_html_e('Configure', 'abovewp-bulgarian-eurozone'); ?>
             </a>
         </div>
+        <?php
+    }
+
+    /**
+     * Currency migration page
+     */
+    public function migration_page() {
+        ?>
+        <div class="abovewp-admin-page">
+            <div class="abovewp-admin-header">
+                <img src="<?php echo esc_url(ABOVEWP_BGE_PLUGIN_URL . 'assets/img/abovewp-logo.png'); ?>" alt="AboveWP" class="abovewp-logo">
+            </div>
+            <h1 class="abovewp-migration-title">
+                <span class="dashicons dashicons-update"></span>
+                <?php esc_html_e('Currency Migration: BGN to EUR', 'abovewp-bulgarian-eurozone'); ?>
+            </h1>
+            
+            <p class="abovewp-migration-description">
+                <?php esc_html_e('Automatically convert all your product prices from Bulgarian Lev (BGN) to Euro (EUR) using the official exchange rate.', 'abovewp-bulgarian-eurozone'); ?>
+            </p>
+            
+            <?php if (!$this->is_site_currency_bgn()): ?>
+            <div class="notice notice-error">
+                <p>
+                    <strong><?php esc_html_e('Currency migration is only available when your store currency is set to BGN.', 'abovewp-bulgarian-eurozone'); ?></strong>
+                </p>
+                <p>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button">
+                        <?php esc_html_e('Back to Settings', 'abovewp-bulgarian-eurozone'); ?>
+                    </a>
+                </p>
+            </div>
+            <?php return; endif; ?>
+            
+            <div class="abovewp-warning-box">
+                <h3 class="abovewp-warning-title">
+                    <span class="dashicons dashicons-warning"></span>
+                    <?php esc_html_e('Important: Read Before Starting', 'abovewp-bulgarian-eurozone'); ?>
+                </h3>
+                <ul class="abovewp-warning-list">
+                    <li><?php esc_html_e('This process will convert ALL product prices from BGN to EUR using the official rate (1.95583 BGN = 1 EUR).', 'abovewp-bulgarian-eurozone'); ?></li>
+                    <li><?php esc_html_e('It will also change your WooCommerce store currency to EUR.', 'abovewp-bulgarian-eurozone'); ?></li>
+                    <li><?php esc_html_e('This includes regular prices, sale prices, and all product variations.', 'abovewp-bulgarian-eurozone'); ?></li>
+                    <li class="abovewp-warning-critical"><?php esc_html_e('BACKUP YOUR DATABASE BEFORE PROCEEDING!', 'abovewp-bulgarian-eurozone'); ?></li>
+                    <li><?php esc_html_e('The process runs in batches to handle stores with thousands of products.', 'abovewp-bulgarian-eurozone'); ?></li>
+                </ul>
+            </div>
+            
+            <div id="migration-status" class="abovewp-migration-status">
+                <h3 class="abovewp-migration-progress-title">
+                    <span class="dashicons dashicons-update-alt dashicons-spin"></span>
+                    <?php esc_html_e('Migration Progress', 'abovewp-bulgarian-eurozone'); ?>
+                </h3>
+                <div class="abovewp-progress-wrapper">
+                    <div class="abovewp-progress-bar-container">
+                        <div id="progress-bar" class="abovewp-progress-bar"></div>
+                    </div>
+                    <p id="progress-text" class="abovewp-progress-text">0%</p>
+                </div>
+                <div id="migration-warnings"></div>
+            </div>
+            
+            <div id="migration-error" class="abovewp-error-box" style="display: none;">
+                <h3 class="abovewp-error-title">
+                    <span class="dashicons dashicons-warning"></span>
+                    <?php esc_html_e('Migration Error', 'abovewp-bulgarian-eurozone'); ?>
+                </h3>
+                <p id="migration-error-message"></p>
+                <p>
+                    <button onclick="location.reload();" class="button button-primary">
+                        <?php esc_html_e('Refresh and Resume', 'abovewp-bulgarian-eurozone'); ?>
+                    </button>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button button-secondary">
+                        <?php esc_html_e('Back to Settings', 'abovewp-bulgarian-eurozone'); ?>
+                    </a>
+                </p>
+            </div>
+            
+            <div id="migration-complete" class="abovewp-success-box">
+                <h3 class="abovewp-success-title">
+                    <span class="dashicons dashicons-yes-alt"></span>
+                    <?php esc_html_e('Migration Complete!', 'abovewp-bulgarian-eurozone'); ?>
+                </h3>
+                <p class="abovewp-success-text">
+                    <?php esc_html_e('All product prices have been successfully converted to EUR.', 'abovewp-bulgarian-eurozone'); ?>
+                </p>
+                <p>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=general')); ?>" class="button button-primary">
+                        <span class="dashicons dashicons-admin-settings"></span>
+                        <?php esc_html_e('View Currency Settings', 'abovewp-bulgarian-eurozone'); ?>
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('edit.php?post_type=product')); ?>" class="button button-secondary">
+                        <span class="dashicons dashicons-products"></span>
+                        <?php esc_html_e('View Products', 'abovewp-bulgarian-eurozone'); ?>
+                    </a>
+                </p>
+            </div>
+            
+            <?php
+            $migration_in_progress = get_option('abovewp_bge_migration_in_progress', false);
+            $migration_offset = (int) get_option('abovewp_bge_migration_offset', 0);
+            $migration_total = (int) get_option('abovewp_bge_migration_total', 0);
+            ?>
+
+            <?php if ($migration_in_progress && $migration_offset > 0): ?>
+            <div id="migration-resume" class="abovewp-resume-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px;">
+                <h3 style="margin-top: 0;">
+                    <span class="dashicons dashicons-info"></span>
+                    <?php esc_html_e('Migration In Progress', 'abovewp-bulgarian-eurozone'); ?>
+                </h3>
+                <p>
+                    <?php printf(esc_html__('A previous migration was interrupted. Progress: %d of %d products processed.', 'abovewp-bulgarian-eurozone'), $migration_offset, $migration_total); ?>
+                </p>
+                <p>
+                    <button id="resume-migration" class="button button-primary">
+                        <?php esc_html_e('Resume Migration', 'abovewp-bulgarian-eurozone'); ?>
+                    </button>
+                    <button id="reset-migration" class="button button-secondary">
+                        <?php esc_html_e('Start Over', 'abovewp-bulgarian-eurozone'); ?>
+                    </button>
+                </p>
+            </div>
+            <?php endif; ?>
+
+            <div id="migration-controls" class="abovewp-migration-controls" <?php echo ($migration_in_progress && $migration_offset > 0) ? 'style="display:none;"' : ''; ?>>
+                <h2 class="abovewp-migration-controls-title">
+                    <span class="dashicons dashicons-migrate"></span>
+                    <?php esc_html_e('Start Migration', 'abovewp-bulgarian-eurozone'); ?>
+                </h2>
+                <p class="abovewp-migration-controls-text">
+                    <?php esc_html_e('Click the button below to start the currency migration process. Make sure you have read all the warnings above and have backed up your database.', 'abovewp-bulgarian-eurozone'); ?>
+                </p>
+
+                <p class="abovewp-migration-controls-buttons">
+                    <button id="start-migration" class="button button-primary button-hero">
+                        <span class="dashicons dashicons-update"></span>
+                        <?php esc_html_e('Start Migration to EUR', 'abovewp-bulgarian-eurozone'); ?>
+                    </button>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button button-secondary button-hero">
+                        <?php esc_html_e('Cancel', 'abovewp-bulgarian-eurozone'); ?>
+                    </a>
+                </p>
+            </div>
+        </div>
+        
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            let isRunning = false;
+            let totalProducts = 0;
+            let processedProducts = 0;
+
+            $('#start-migration').on('click', function() {
+                if (isRunning) return;
+
+                if (!confirm('<?php esc_html_e('Are you sure you want to start the migration? This will convert all prices from BGN to EUR. Make sure you have a database backup!', 'abovewp-bulgarian-eurozone'); ?>')) {
+                    return;
+                }
+
+                isRunning = true;
+                $(this).prop('disabled', true);
+                $('#migration-controls').hide();
+                $('#migration-status').show();
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'abovewp_get_product_count',
+                        nonce: '<?php echo wp_create_nonce('abovewp_migration'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            totalProducts = response.data.count;
+                            processedProducts = 0;
+                            processBatch(0);
+                        } else {
+                            alert('<?php esc_html_e('Error:', 'abovewp-bulgarian-eurozone'); ?> ' + response.data.message);
+                            isRunning = false;
+                        }
+                    },
+                    error: function() {
+                        alert('<?php esc_html_e('Failed to get product count', 'abovewp-bulgarian-eurozone'); ?>');
+                        isRunning = false;
+                    }
+                });
+            });
+
+            $('#resume-migration').on('click', function() {
+                if (isRunning) return;
+
+                if (!confirm('<?php esc_html_e('Resume the migration from where it left off?', 'abovewp-bulgarian-eurozone'); ?>')) {
+                    return;
+                }
+
+                isRunning = true;
+                processedProducts = <?php echo (int) $migration_offset; ?>;
+                totalProducts = <?php echo (int) $migration_total; ?>;
+
+                $('#migration-resume').hide();
+                $('#migration-status').show();
+
+                const percentage = Math.round((processedProducts / totalProducts) * 100);
+                $('#progress-bar').css('width', percentage + '%').text(percentage + '%');
+                $('#progress-text').text(percentage + '% (' + processedProducts + ' / ' + totalProducts + ')');
+
+                processBatch(processedProducts);
+            });
+
+            $('#reset-migration').on('click', function() {
+                if (!confirm('<?php esc_html_e('Are you sure you want to start over? This will reset migration progress.', 'abovewp-bulgarian-eurozone'); ?>')) {
+                    return;
+                }
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'abovewp_reset_migration',
+                        nonce: '<?php echo wp_create_nonce('abovewp_migration'); ?>'
+                    },
+                    success: function() {
+                        location.reload();
+                    }
+                });
+            });
+
+            function processBatch(offset) {
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'abovewp_migrate_products',
+                        offset: offset,
+                        nonce: '<?php echo wp_create_nonce('abovewp_migration'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            processedProducts += response.data.processed;
+                            const percentage = Math.round((processedProducts / totalProducts) * 100);
+
+                            $('#progress-bar').css('width', percentage + '%').text(percentage + '%');
+                            $('#progress-text').text(percentage + '% (' + processedProducts + ' / ' + totalProducts + ')');
+
+                            // Show warnings if any products had issues
+                            if (response.data.warnings && response.data.warnings.length > 0) {
+                                let warningHtml = '<div class="abovewp-migration-warning"><p><strong><?php esc_html_e('Some products had issues:', 'abovewp-bulgarian-eurozone'); ?></strong></p><ul>';
+                                response.data.warnings.forEach(function(warning) {
+                                    warningHtml += '<li>' + warning + '</li>';
+                                });
+                                warningHtml += '</ul></div>';
+                                $('#migration-warnings').append(warningHtml);
+                            }
+
+                            if (response.data.has_more) {
+                                processBatch(processedProducts);
+                            } else {
+                                finalizeMigration();
+                            }
+                        } else {
+                            showMigrationError(response.data.message);
+                            isRunning = false;
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        let errorMsg = '<?php esc_html_e('Failed to process batch.', 'abovewp-bulgarian-eurozone'); ?>';
+                        if (error) {
+                            errorMsg += ' ' + error;
+                        }
+                        errorMsg += ' <?php esc_html_e('You can resume later from where it stopped.', 'abovewp-bulgarian-eurozone'); ?>';
+                        showMigrationError(errorMsg);
+                        isRunning = false;
+                    }
+                });
+            }
+
+            function showMigrationError(message) {
+                $('#migration-status').hide();
+                $('#migration-error-message').text(message);
+                $('#migration-error').show();
+            }
+
+            function finalizeMigration() {
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'abovewp_finalize_migration',
+                        nonce: '<?php echo wp_create_nonce('abovewp_migration'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#migration-status').hide();
+                            $('#migration-complete').show();
+                            isRunning = false;
+                        } else {
+                            alert('<?php esc_html_e('Error finalizing migration:', 'abovewp-bulgarian-eurozone'); ?> ' + response.data.message);
+                            isRunning = false;
+                        }
+                    },
+                    error: function() {
+                        alert('<?php esc_html_e('Failed to finalize migration', 'abovewp-bulgarian-eurozone'); ?>');
+                        isRunning = false;
+                    }
+                });
+            }
+        });
+        </script>
         <?php
     }
 
@@ -1101,8 +1769,20 @@ class AboveWP_Bulgarian_Eurozone {
             
             // Add our custom CSS to hide any notices that might get through
             echo '<style>
-                .notice, .updated, .update-nag, .error, .warning, .info { 
+                .notice:not(.abovewp-migration-warning), .updated, .update-nag, .error:not(.abovewp-error-box), .warning, .info { 
                     display: none !important; 
+                }
+                .abovewp-migration-warning {
+                    background: #fff3cd;
+                    border-left: 4px solid #ffc107;
+                    padding: 12px 15px;
+                    margin: 10px 0;
+                }
+                .abovewp-migration-warning ul {
+                    margin: 10px 0 0 20px;
+                }
+                .abovewp-migration-warning li {
+                    margin: 5px 0;
                 }
             </style>';
         }
@@ -1112,7 +1792,7 @@ class AboveWP_Bulgarian_Eurozone {
      * Enqueue scripts and styles for blocks
      */
     public function enqueue_blocks_scripts() {
-        if (!$this->is_site_currency_bgn() || get_option('abovewp_bge_enabled', 'yes') !== 'yes') {
+        if (!$this->is_site_currency_supported() || get_option('abovewp_bge_enabled', 'yes') !== 'yes') {
             return;
         }
 
@@ -1136,44 +1816,51 @@ class AboveWP_Bulgarian_Eurozone {
         // Localize script with data
         wp_localize_script('abovewp-bulgarian-eurozone-blocks', 'abovewpBGE', array(
             'conversionRate' => $this->conversion_rate,
+            'primaryCurrency' => $this->get_primary_currency(),
+            'secondaryCurrency' => $this->get_secondary_currency(),
             'eurLabel' => esc_html($this->get_eur_label()),
+            'bgnLabel' => esc_html($this->get_bgn_label()),
+            'secondaryLabel' => esc_html($this->get_secondary_currency_label()),
             'eurPosition' => get_option('abovewp_bge_eur_position', 'right'),
-            'eurFormat' => get_option('abovewp_bge_eur_format', 'brackets')
+            'eurFormat' => get_option('abovewp_bge_eur_format', 'brackets'),
+            'bgnRounding' => get_option('abovewp_bge_bgn_rounding', 'smart')
         ));
     }
 
     /**
-     * Add EUR price to line subtotal on thank you page
+     * Add secondary currency price to line subtotal on thank you page
      *
      * @param string $subtotal Formatted line subtotal
      * @param object $item Order item
      * @param object $order WC_Order
-     * @return string Modified subtotal with EUR equivalent
+     * @return string Modified subtotal with secondary currency equivalent
      */
     public function add_eur_to_thank_you_line_subtotal($subtotal, $item, $order) {
         // Get the tax display setting for orders
         $tax_display = get_option('woocommerce_tax_display_cart');
         
         if ('incl' === $tax_display) {
-            // Include item tax in the subtotal for EUR conversion
-            $subtotal_bgn = $item->get_total() + $item->get_total_tax();
+            // Include item tax in the subtotal for conversion
+            $subtotal_primary = $item->get_total() + $item->get_total_tax();
         } else {
-            $subtotal_bgn = $item->get_total();
+            $subtotal_primary = $item->get_total();
         }
         
-        $subtotal_eur = $this->convert_bgn_to_eur($subtotal_bgn);
+        $subtotal_secondary = $this->convert_to_secondary_currency($subtotal_primary);
         
-        return $this->add_eur_to_value($subtotal, $subtotal_eur);
+        return $this->add_eur_to_value($subtotal, $subtotal_secondary);
     }
 
     /**
-     * Add EUR to order tax totals
+     * Add secondary currency to order tax totals
      *
      * @param array $tax_totals
      * @param object $order
      * @return array
      */
     public function add_eur_to_order_tax_totals($tax_totals, $order) {
+        $secondary_label = $this->get_secondary_currency_label();
+        
         foreach ($tax_totals as $code => $tax) {
             $formatted_amount = null;
             $amount = 0;
@@ -1186,20 +1873,395 @@ class AboveWP_Bulgarian_Eurozone {
                 $amount = isset($tax->amount) ? $tax->amount : 0;
             }
             
-            if ($formatted_amount && strpos($formatted_amount, $this->get_eur_label()) === false && $amount > 0) {
-                $tax_amount_eur = $this->convert_bgn_to_eur($amount);
-                $formatted_amount_with_eur = $this->add_eur_to_value($formatted_amount, $tax_amount_eur);
+            if ($formatted_amount && strpos($formatted_amount, $secondary_label) === false && $amount > 0) {
+                $tax_amount_secondary = $this->convert_to_secondary_currency($amount);
+                $formatted_amount_with_secondary = $this->add_eur_to_value($formatted_amount, $tax_amount_secondary);
                 
                 if (is_array($tax)) {
-                    $tax['formatted_amount'] = $formatted_amount_with_eur;
+                    $tax['formatted_amount'] = $formatted_amount_with_secondary;
                     $tax_totals[$code] = $tax;
                 } elseif (is_object($tax)) {
-                    $tax->formatted_amount = $formatted_amount_with_eur;
+                    $tax->formatted_amount = $formatted_amount_with_secondary;
                     $tax_totals[$code] = $tax;
                 }
             }
         }
         return $tax_totals;
+    }
+
+    /**
+     * Check if an order was placed in BGN (legacy order before migration)
+     *
+     * @param WC_Order $order
+     * @return bool
+     */
+    private function is_legacy_bgn_order($order) {
+        if (!$order) {
+            return false;
+        }
+        return $order->get_currency() === 'BGN';
+    }
+
+    /**
+     * Format amount with EUR currency symbol (no conversion, just symbol change)
+     *
+     * @param float $amount The amount to format
+     * @return string Formatted price with EUR symbol
+     */
+    private function format_as_eur($amount) {
+        return wc_price($amount, array(
+            'currency' => 'EUR',
+            'decimal_separator' => wc_get_price_decimal_separator(),
+            'thousand_separator' => wc_get_price_thousand_separator(),
+            'decimals' => wc_get_price_decimals(),
+        ));
+    }
+
+    /**
+     * Fix legacy order line subtotal to display with EUR symbol instead of BGN
+     *
+     * @param string $subtotal
+     * @param object $item
+     * @param WC_Order $order
+     * @return string
+     */
+    public function fix_legacy_order_line_subtotal($subtotal, $item, $order) {
+        if (!$this->is_legacy_bgn_order($order)) {
+            return $subtotal;
+        }
+        
+        // Get the line subtotal based on tax display setting
+        $tax_display = get_option('woocommerce_tax_display_cart');
+        
+        if ('incl' === $tax_display) {
+            $amount = $item->get_total() + $item->get_total_tax();
+        } else {
+            $amount = $item->get_total();
+        }
+        
+        return $this->format_as_eur($amount);
+    }
+
+    /**
+     * Fix legacy order total to display with EUR symbol instead of BGN
+     *
+     * @param string $formatted_total
+     * @param WC_Order $order
+     * @return string
+     */
+    public function fix_legacy_order_total($formatted_total, $order) {
+        if (!$this->is_legacy_bgn_order($order)) {
+            return $formatted_total;
+        }
+        
+        $total = $order->get_total();
+        return $this->format_as_eur($total);
+    }
+
+    /**
+     * Fix legacy order subtotal display to show with EUR symbol instead of BGN
+     *
+     * @param string $subtotal
+     * @param bool $compound
+     * @param WC_Order $order
+     * @return string
+     */
+    public function fix_legacy_order_subtotal_display($subtotal, $compound, $order) {
+        if (!$this->is_legacy_bgn_order($order)) {
+            return $subtotal;
+        }
+        
+        $tax_display = get_option('woocommerce_tax_display_cart');
+        
+        if ('incl' === $tax_display) {
+            $amount = $order->get_subtotal() + $order->get_cart_tax();
+        } else {
+            $amount = $order->get_subtotal();
+        }
+        
+        return $this->format_as_eur($amount);
+    }
+
+    /**
+     * Fix legacy order shipping display to show with EUR symbol instead of BGN
+     *
+     * @param string $shipping
+     * @param WC_Order $order
+     * @param string $tax_display
+     * @return string
+     */
+    public function fix_legacy_order_shipping_display($shipping, $order, $tax_display) {
+        if (!$this->is_legacy_bgn_order($order)) {
+            return $shipping;
+        }
+        
+        if ('incl' === $tax_display) {
+            $amount = $order->get_shipping_total() + $order->get_shipping_tax();
+        } else {
+            $amount = $order->get_shipping_total();
+        }
+        
+        if ($amount == 0) {
+            return $shipping; // Keep original "Free!" text if applicable
+        }
+        
+        return $this->format_as_eur($amount);
+    }
+
+    /**
+     * Fix legacy order discount display to show with EUR symbol instead of BGN
+     *
+     * @param string $discount
+     * @param WC_Order $order
+     * @return string
+     */
+    public function fix_legacy_order_discount_display($discount, $order) {
+        if (!$this->is_legacy_bgn_order($order)) {
+            return $discount;
+        }
+        
+        $amount = $order->get_total_discount();
+        
+        if ($amount == 0) {
+            return $discount;
+        }
+        
+        return '-' . $this->format_as_eur($amount);
+    }
+
+    /**
+     * AJAX: Get total product count
+     */
+    public function ajax_get_product_count() {
+        check_ajax_referer('abovewp_migration', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Unauthorized'));
+        }
+
+        $args = array(
+            'post_type' => 'product',
+            'post_status' => 'any',
+            'posts_per_page' => -1,
+            'fields' => 'ids'
+        );
+
+        $products = get_posts($args);
+        $count = count($products);
+
+        update_option('abovewp_bge_migration_in_progress', true);
+        update_option('abovewp_bge_migration_total', $count);
+        update_option('abovewp_bge_migration_offset', 0);
+
+        wp_send_json_success(array('count' => $count));
+    }
+
+    /**
+     * AJAX: Migrate products in batches
+     */
+    public function ajax_migrate_products() {
+        check_ajax_referer('abovewp_migration', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Unauthorized', 'abovewp-bulgarian-eurozone')));
+        }
+
+        $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+        $batch_size = 50; // Process 50 products at a time
+
+        $args = array(
+            'post_type' => 'product',
+            'post_status' => 'any',
+            'posts_per_page' => $batch_size,
+            'offset' => $offset,
+            'fields' => 'ids'
+        );
+
+        $product_ids = get_posts($args);
+        $processed = 0;
+        $errors = array();
+
+        foreach ($product_ids as $product_id) {
+            $result = $this->migrate_product_prices($product_id);
+            
+            if (is_wp_error($result)) {
+                $errors[] = sprintf(
+                    /* translators: %1$d is the product ID, %2$s is the error message */
+                    __('Product #%1$d: %2$s', 'abovewp-bulgarian-eurozone'),
+                    $product_id,
+                    $result->get_error_message()
+                );
+                // Store the last error for display
+                update_option('abovewp_bge_migration_last_error', array(
+                    'product_id' => $product_id,
+                    'message' => $result->get_error_message(),
+                    'time' => current_time('mysql')
+                ));
+            }
+            $processed++;
+            
+            // Save progress after each product for granular resume capability
+            update_option('abovewp_bge_migration_offset', $offset + $processed);
+        }
+
+        $has_more = count($product_ids) === $batch_size;
+
+        $response = array(
+            'processed' => $processed,
+            'has_more' => $has_more
+        );
+
+        if (!empty($errors)) {
+            $response['warnings'] = $errors;
+        }
+
+        wp_send_json_success($response);
+    }
+
+    /**
+     * Migrate a single product's prices from BGN to EUR
+     *
+     * @param int $product_id
+     * @return true|WP_Error True on success, WP_Error on failure
+     */
+    private function migrate_product_prices($product_id) {
+        try {
+            $product = wc_get_product($product_id);
+            
+            if (!$product) {
+                return new WP_Error(
+                    'product_not_found',
+                    __('Product could not be loaded', 'abovewp-bulgarian-eurozone')
+                );
+            }
+            
+            // Convert regular price
+            $regular_price = $product->get_regular_price();
+            if ($regular_price) {
+                $new_regular_price = $this->convert_bgn_to_eur($regular_price);
+                $product->set_regular_price($new_regular_price);
+            }
+            
+            // Convert sale price
+            $sale_price = $product->get_sale_price();
+            if ($sale_price) {
+                $new_sale_price = $this->convert_bgn_to_eur($sale_price);
+                $product->set_sale_price($new_sale_price);
+            }
+            
+            // Save the product
+            $product->save();
+            
+            // Handle variations if it's a variable product
+            if ($product->is_type('variable')) {
+                $variations = $product->get_children();
+                
+                foreach ($variations as $variation_id) {
+                    $variation = wc_get_product($variation_id);
+                    
+                    if (!$variation) {
+                        continue; // Skip missing variations but don't fail the whole product
+                    }
+                    
+                    // Convert variation regular price
+                    $var_regular_price = $variation->get_regular_price();
+                    if ($var_regular_price) {
+                        $new_var_regular_price = $this->convert_bgn_to_eur($var_regular_price);
+                        $variation->set_regular_price($new_var_regular_price);
+                    }
+                    
+                    // Convert variation sale price
+                    $var_sale_price = $variation->get_sale_price();
+                    if ($var_sale_price) {
+                        $new_var_sale_price = $this->convert_bgn_to_eur($var_sale_price);
+                        $variation->set_sale_price($new_var_sale_price);
+                    }
+                    
+                    $variation->save();
+                }
+                
+                // Sync variable product price range
+                WC_Product_Variable::sync($product_id);
+            }
+            
+            return true;
+            
+        } catch (Exception $e) {
+            return new WP_Error(
+                'migration_exception',
+                $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * AJAX: Finalize migration by changing store currency
+     */
+    public function ajax_finalize_migration() {
+        check_ajax_referer('abovewp_migration', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Unauthorized', 'abovewp-bulgarian-eurozone')));
+        }
+
+        try {
+            // Update WooCommerce currency to EUR
+            update_option('woocommerce_currency', 'EUR');
+
+            delete_option('abovewp_bge_migration_in_progress');
+            delete_option('abovewp_bge_migration_offset');
+            delete_option('abovewp_bge_migration_total');
+            delete_option('abovewp_bge_migration_last_error');
+
+            // Clear WooCommerce caches
+            if (function_exists('wc_delete_product_transients')) {
+                wc_delete_product_transients();
+            }
+
+            wp_send_json_success(array('message' => __('Migration completed successfully', 'abovewp-bulgarian-eurozone')));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => sprintf(
+                    /* translators: %s is the error message */
+                    __('Failed to finalize migration: %s', 'abovewp-bulgarian-eurozone'),
+                    $e->getMessage()
+                )
+            ));
+        }
+    }
+
+    /**
+     * AJAX: Reset migration progress
+     */
+    public function ajax_reset_migration() {
+        check_ajax_referer('abovewp_migration', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Unauthorized', 'abovewp-bulgarian-eurozone')));
+        }
+
+        delete_option('abovewp_bge_migration_in_progress');
+        delete_option('abovewp_bge_migration_offset');
+        delete_option('abovewp_bge_migration_total');
+        delete_option('abovewp_bge_migration_last_error');
+
+        wp_send_json_success(array('message' => __('Migration progress reset', 'abovewp-bulgarian-eurozone')));
+    }
+
+    /**
+     * AJAX: Dismiss migration notice
+     */
+    public function ajax_dismiss_migration_notice() {
+        check_ajax_referer('abovewp_dismiss_notice', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Unauthorized'));
+        }
+
+        update_user_meta(get_current_user_id(), 'abovewp_migration_notice_dismissed', true);
+
+        wp_send_json_success();
     }
 }
 

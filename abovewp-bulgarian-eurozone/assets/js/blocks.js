@@ -1,8 +1,8 @@
 /**
  * AboveWP Bulgarian Eurozone - JavaScript for WooCommerce Blocks
  * 
- * Handles dual currency display (BGN/EUR) for WooCommerce Gutenberg blocks
- * with configurable EUR price positioning (left or right of BGN price)
+ * Handles bidirectional dual currency display (BGN ⇄ EUR) for WooCommerce Gutenberg blocks
+ * with configurable secondary currency positioning (left or right of primary price)
  */
 (function($) {
     'use strict';
@@ -13,21 +13,25 @@
         return;
     }
     
-    // Get conversion rate, EUR label, position, and format from localized data
+    // Get conversion rate, currency info, position, and format from localized data
     const conversionRate = abovewpBGE.conversionRate;
-    const eurLabel = abovewpBGE.eurLabel;
+    const primaryCurrency = abovewpBGE.primaryCurrency; // 'BGN' or 'EUR'
+    const secondaryCurrency = abovewpBGE.secondaryCurrency; // 'EUR' or 'BGN'
+    const eurLabel = abovewpBGE.eurLabel || '€';
+    const bgnLabel = abovewpBGE.bgnLabel || 'лв.';
+    const secondaryLabel = abovewpBGE.secondaryLabel;
     const eurPosition = abovewpBGE.eurPosition || 'right';
     const eurFormat = abovewpBGE.eurFormat || 'brackets';
+    const bgnRounding = abovewpBGE.bgnRounding || 'smart';
 
     /**
-     * Convert BGN to EUR
+     * Normalize price string to float
      * 
-     * @param {string} bgnPrice - Price in BGN (may include thousands separators)
-     * @return {string} - Formatted price in EUR with 2 decimal places
+     * @param {string} price - Price string (may include thousands separators)
+     * @return {number} - Normalized price as float
      */
-    function convertBgnToEur(bgnPrice) {
-        // Remove all thousands separators (spaces and dots) and normalize decimal separator
-        let normalizedPrice = String(bgnPrice);
+    function normalizePrice(price) {
+        let normalizedPrice = String(price);
         
         // Check if the last comma/dot is the decimal separator (2 digits after it)
         const decimalMatch = normalizedPrice.match(/[.,](\d{2})$/);
@@ -47,49 +51,92 @@
             normalizedPrice = normalizedPrice.replace(/[\s.,]/g, '');
         }
         
-        // Convert to EUR
-        return (parseFloat(normalizedPrice) / conversionRate).toFixed(2);
+        return parseFloat(normalizedPrice);
     }
 
     /**
-     * Format EUR price with label
+     * Convert BGN to EUR
      * 
-     * @param {number|string} eurPrice - Price in EUR
-     * @return {string} - Formatted price with EUR label
+     * @param {string} bgnPrice - Price in BGN (may include thousands separators)
+     * @return {string} - Formatted price in EUR with 2 decimal places
      */
-    function formatEurPrice(eurPrice) {
+    function convertBgnToEur(bgnPrice) {
+        return (normalizePrice(bgnPrice) / conversionRate).toFixed(2);
+    }
+
+    /**
+     * Convert EUR to BGN
+     *
+     * @param {string} eurPrice - Price in EUR (may include thousands separators)
+     * @return {string} - Formatted price in BGN with 2 decimal places
+     */
+    function convertEurToBgn(eurPrice) {
+        var raw = normalizePrice(eurPrice) * conversionRate;
+        var rounded = Math.round(raw * 100) / 100;
+
+        if (bgnRounding === 'smart') {
+            var nearestInt = Math.round(rounded);
+            if (Math.abs(rounded - nearestInt) < 0.015) {
+                return nearestInt.toFixed(2);
+            }
+        }
+        return rounded.toFixed(2);
+    }
+
+    /**
+     * Convert price from primary to secondary currency
+     * 
+     * @param {string} price - Price in primary currency
+     * @return {string} - Formatted price in secondary currency with 2 decimal places
+     */
+    function convertToSecondary(price) {
+        if (primaryCurrency === 'BGN') {
+            return convertBgnToEur(price);
+        } else if (primaryCurrency === 'EUR') {
+            return convertEurToBgn(price);
+        }
+        return price;
+    }
+
+    /**
+     * Format secondary currency price with label
+     * 
+     * @param {number|string} secondaryPrice - Price in secondary currency
+     * @return {string} - Formatted price with secondary currency label
+     */
+    function formatSecondaryPrice(secondaryPrice) {
         if (eurFormat === 'divider') {
-            return '/ ' + eurPrice + ' ' + eurLabel;
+            return '/ ' + secondaryPrice + ' ' + secondaryLabel;
         } else {
-            return '(' + eurPrice + ' ' + eurLabel + ')';
+            return '(' + secondaryPrice + ' ' + secondaryLabel + ')';
         }
     }
 
     /**
      * Format dual currency price based on position setting
      * 
-     * @param {string} bgnPriceHtml - The original BGN price HTML/text
-     * @param {number|string} eurPrice - The EUR price amount
+     * @param {string} primaryPriceHtml - The original primary currency price HTML/text
+     * @param {number|string} secondaryPrice - The secondary currency price amount
      * @return {string} - The formatted dual currency price
      */
-    function formatDualPrice(bgnPriceHtml, eurPrice) {
-        const eurFormatted = formatEurPrice(eurPrice);
-        const eurSpan = '<span class="eur-price">' + eurFormatted + '</span>';
+    function formatDualPrice(primaryPriceHtml, secondaryPrice) {
+        const secondaryFormatted = formatSecondaryPrice(secondaryPrice);
+        const secondarySpan = '<span class="eur-price">' + secondaryFormatted + '</span>';
         
         if (eurPosition === 'left') {
-            return eurSpan + ' ' + bgnPriceHtml;
+            return secondarySpan + ' ' + primaryPriceHtml;
         } else {
-            return bgnPriceHtml + ' ' + eurSpan;
+            return primaryPriceHtml + ' ' + secondarySpan;
         }
     }
     
     /**
-     * Check if element already has a EUR price
+     * Check if element already has a secondary currency price
      * 
      * @param {Element} element - The element to check
-     * @return {boolean} - True if element already has EUR price
+     * @return {boolean} - True if element already has secondary currency price
      */
-    function hasEurPrice(element) {
+    function hasSecondaryPrice(element) {
         const $element = $(element);
         
         // Check for span with eur-price class within or next to the element
@@ -100,7 +147,7 @@
             return true;
         }
         
-        // Check parent containers for EUR spans
+        // Check parent containers for secondary currency spans
         if ($element.parent().find('.eur-price').length > 0) {
             return true;
         }
@@ -110,10 +157,10 @@
             return true;
         }
         
-        // Check if the text already contains EUR symbol (be more specific)
+        // Check if the text already contains secondary currency symbol
         const text = $element.text();
-        if (text.includes('(' + eurLabel + ')') || text.includes(eurLabel + ')') || 
-            text.includes('/ ' + eurLabel) || text.includes('/ ' + eurLabel + ')')) {
+        if (text.includes('(' + secondaryLabel + ')') || text.includes(secondaryLabel + ')') || 
+            text.includes('/ ' + secondaryLabel) || text.includes('/ ' + secondaryLabel + ')')) {
             return true;
         }
         
@@ -126,40 +173,62 @@
         return false;
     }
 
+    // Keep old function name for backward compatibility
+    const hasEurPrice = hasSecondaryPrice;
+
     /**
-     * Add EUR price to a price element based on position setting
+     * Get price pattern based on primary currency
+     * 
+     * @return {RegExp} - Price pattern for the primary currency
+     */
+    function getPricePattern() {
+        if (primaryCurrency === 'BGN') {
+            // Match BGN price pattern with thousands separators
+            // Examples: "1 650,00 лв.", "1.650,00 лв.", "25,00 лв.", "1650,00"
+            return /(\d+(?:[\s.]\d{3})*[.,]\d{2})\s*(?:лв\.|BGN)?/;
+        } else if (primaryCurrency === 'EUR') {
+            // Match EUR price pattern
+            // Examples: "1 650,00 €", "1.650,00 €", "25,00 €", "€1650,00"
+            return /(?:€\s*)?(\d+(?:[\s.]\d{3})*[.,]\d{2})\s*(?:€|EUR)?/;
+        }
+        return /(\d+(?:[\s.]\d{3})*[.,]\d{2})/;
+    }
+
+    /**
+     * Add secondary currency price to a price element based on position setting
      * 
      * @param {Element} element - The element containing the price
      */
-    function addEurPrice(element) {
+    function addSecondaryPrice(element) {
         // Skip if already processed
-        if (hasEurPrice(element)) {
+        if (hasSecondaryPrice(element)) {
             return;
         }
         
         const $element = $(element);
         const text = $element.text().trim();
         
-        // Match BGN price pattern with thousands separators
-        // Examples: "1 650,00 лв.", "1.650,00 лв.", "25,00 лв.", "1650,00"
-        const pricePattern = /(\d+(?:[\s.]\d{3})*[.,]\d{2})\s*(?:лв\.|BGN)?/;
+        const pricePattern = getPricePattern();
         const match = text.match(pricePattern);
         
         if (match) {
-            const priceBgn = match[1];
-            const priceEur = convertBgnToEur(priceBgn);
+            const pricePrimary = match[1];
+            const priceSecondary = convertToSecondary(pricePrimary);
             
-            // Create the EUR price element
-            const $eurSpan = $('<span class="eur-price">' + formatEurPrice(priceEur) + '</span>');
+            // Create the secondary currency price element
+            const $secondarySpan = $('<span class="eur-price">' + formatSecondaryPrice(priceSecondary) + '</span>');
             
             // Add based on position setting
             if (eurPosition === 'left') {
-                $element.prepend($eurSpan).prepend(' ');
+                $element.prepend($secondarySpan).prepend(' ');
             } else {
-                $element.append(' ').append($eurSpan);
+                $element.append(' ').append($secondarySpan);
             }
         }
     }
+
+    // Keep old function name for backward compatibility
+    const addEurPrice = addSecondaryPrice;
 
     /**
      * Replace element content with dual currency price based on position setting
@@ -168,25 +237,53 @@
      */
     function replaceDualPrice(element) {
         // Skip if already processed
-        if (hasEurPrice(element)) {
+        if (hasSecondaryPrice(element)) {
             return;
         }
         
         const $element = $(element);
+        let pricePrimary;
+        
+        // Check if this is a sale price scenario (has both regular and sale price)
+        const $salePrice = $element.find('ins.wc-block-components-product-price__value, .wc-block-components-product-price__value.is-discounted');
+        const $regularPrice = $element.find('del.wc-block-components-product-price__regular');
+        
+        if ($salePrice.length > 0 && $regularPrice.length > 0) {
+            // This is a sale - use the sale price (ins element)
+            const salePriceText = $salePrice.text().trim();
+            const pricePattern = getPricePattern();
+            const match = salePriceText.match(pricePattern);
+            
+            if (match) {
+                pricePrimary = match[1];
+                const priceSecondary = convertToSecondary(pricePrimary);
+                
+                // Add secondary currency after the sale price (ins element)
+                const secondaryFormatted = formatSecondaryPrice(priceSecondary);
+                const secondarySpan = '<span class="eur-price">' + secondaryFormatted + '</span>';
+                
+                if (eurPosition === 'left') {
+                    $element.prepend(secondarySpan + ' ');
+                } else {
+                    $element.append(' ' + secondarySpan);
+                }
+                return;
+            }
+        }
+        
+        // No sale price, process normally
         const originalHtml = $element.html();
         const text = $element.text().trim();
         
-        // Match BGN price pattern with thousands separators
-        // Examples: "1 650,00 лв.", "1.650,00 лв.", "25,00 лв.", "1650,00"
-        const pricePattern = /(\d+(?:[\s.]\d{3})*[.,]\d{2})\s*(?:лв\.|BGN)?/;
+        const pricePattern = getPricePattern();
         const match = text.match(pricePattern);
         
         if (match) {
-            const priceBgn = match[1];
-            const priceEur = convertBgnToEur(priceBgn);
+            pricePrimary = match[1];
+            const priceSecondary = convertToSecondary(pricePrimary);
             
             // Replace content with dual price
-            const dualPriceHtml = formatDualPrice(originalHtml, priceEur);
+            const dualPriceHtml = formatDualPrice(originalHtml, priceSecondary);
             $element.html(dualPriceHtml);
         }
     }
@@ -236,10 +333,10 @@
         $('#shipping_method li, .woocommerce-shipping-methods li').each(function() {
             var $li = $(this);
             
-            // Check if the label already contains EUR information (skip these)
+            // Check if the label already contains secondary currency information (skip these)
             var labelText = $li.find('label').text();
-            if (labelText && (labelText.indexOf('€') !== -1 || labelText.indexOf('EUR') !== -1)) {
-                return; // Skip if label already has EUR built in
+            if (labelText && (labelText.indexOf(secondaryLabel) !== -1)) {
+                return; // Skip if label already has secondary currency built in
             }
             
             // Find price spans within this shipping method
@@ -250,52 +347,63 @@
                     var text = $this.text().trim();
                     var html = $this.html(); // Get HTML to handle &nbsp; entities
                     
-                    // Skip if no price or price already contains EUR text
-                    if (!text || text.indexOf(eurLabel) !== -1) {
+                    // Skip if no price or price already contains secondary currency text
+                    if (!text || text.indexOf(secondaryLabel) !== -1) {
                         return;
                     }
                     
-                    // Enhanced BGN price pattern to handle &nbsp; entities and various formats
-                    // Handle both text and HTML content for better matching
-                    var priceMatch = text.match(/(\d+(?:[,\s.]\d{3})*[,\.]\d{2})\s*(?:лв\.|BGN)?/) || 
-                                   html.match(/(\d+(?:[,\s.&nbsp;]\d{3})*[,\.]\d{2})\s*(?:лв\.|BGN)?/);
+                    // Enhanced price pattern to handle &nbsp; entities and various formats
+                    var pricePattern;
+                    if (primaryCurrency === 'BGN') {
+                        pricePattern = /(\d+(?:[,\s.&nbsp;]\d{3})*[,\.]\d{2})\s*(?:лв\.|BGN)?/;
+                    } else {
+                        pricePattern = /(?:€\s*)?(\d+(?:[,\s.&nbsp;]\d{3})*[,\.]\d{2})\s*(?:€|EUR)?/;
+                    }
+                    
+                    var priceMatch = text.match(pricePattern) || html.match(pricePattern);
                     
                     if (priceMatch) {
-                        var priceBgnRaw = priceMatch[1];
+                        var pricePrimaryRaw = priceMatch[1];
                         // Clean up the price: remove &nbsp; entities, spaces, and normalize decimal separator
-                        var priceBgn = priceBgnRaw.replace(/&nbsp;/g, '').replace(/\s/g, '').replace(',', '.');
-                        var currentPriceEur = (parseFloat(priceBgn) / conversionRate).toFixed(2);
+                        var pricePrimary = pricePrimaryRaw.replace(/&nbsp;/g, '').replace(/\s/g, '').replace(',', '.');
+                        var currentPriceSecondary = convertToSecondary(pricePrimary);
                         
-                        // Check if there's already an EUR price for this shipping method
-                        var $existingEurSpan = $li.find('.eur-price');
-                        if ($existingEurSpan.length > 0) {
-                            // Extract the existing EUR price
-                            var existingEurText = $existingEurSpan.text();
-                            var existingEurMatch = existingEurText.match(/(\d+[.,]\d{2})/);
+                        // Check if there's already a secondary currency price for this shipping method
+                        var $existingSecondarySpan = $li.find('.eur-price');
+                        if ($existingSecondarySpan.length > 0) {
+                            // Extract the existing secondary price
+                            var existingSecondaryText = $existingSecondarySpan.text();
+                            var existingSecondaryMatch = existingSecondaryText.match(/(\d+[.,]\d{2})/);
                             
-                            if (existingEurMatch) {
-                                var existingEurPrice = existingEurMatch[1].replace(',', '.');
-                                // If the EUR prices don't match (BGN price changed), remove old EUR
-                                if (Math.abs(parseFloat(currentPriceEur) - parseFloat(existingEurPrice)) > 0.01) {
-                                    $existingEurSpan.remove();
+                            if (existingSecondaryMatch) {
+                                var existingSecondaryPrice = existingSecondaryMatch[1].replace(',', '.');
+                                // If the secondary prices don't match (primary price changed), remove old one
+                                if (Math.abs(parseFloat(currentPriceSecondary) - parseFloat(existingSecondaryPrice)) > 0.01) {
+                                    $existingSecondarySpan.remove();
                                 } else {
-                                    // EUR price is correct, skip adding new one
+                                    // Secondary price is correct, skip adding new one
                                     return;
                                 }
                             } else {
-                                // Can't parse existing EUR, remove it to be safe
-                                $existingEurSpan.remove();
+                                // Can't parse existing secondary price, remove it to be safe
+                                $existingSecondarySpan.remove();
                             }
                         }
                         
-                        // Add the new/updated EUR price
-                        var eurFormatted = formatEurPrice(currentPriceEur);
-                        var eurSpan = '<span class="eur-price">' + eurFormatted + '</span>';
+                        // Add the new/updated secondary currency price
+                        var secondaryFormatted = formatSecondaryPrice(currentPriceSecondary);
+                        var secondarySpan = '<span class="eur-price">' + secondaryFormatted + '</span>';
                         
-                        if (eurPosition === 'left') {
-                            $this.before(eurSpan + ' ');
+                        // When EUR is the site currency, always show EUR first (it's the primary)
+                        // When BGN is the site currency, respect the eurPosition setting
+                        if (primaryCurrency === 'EUR') {
+                            // EUR is primary, so always add BGN (secondary) after
+                            $this.after(' ' + secondarySpan);
+                        } else if (eurPosition === 'left') {
+                            // BGN is primary, EUR can go before or after based on setting
+                            $this.before(secondarySpan + ' ');
                         } else {
-                            $this.after(' ' + eurSpan);
+                            $this.after(' ' + secondarySpan);
                         }
                     }
                 });
@@ -322,7 +430,7 @@
         $('.wc-block-components-radio-control__option').each(function() {
             var $option = $(this);
             
-            // Skip if this shipping option already has EUR conversion
+            // Skip if this shipping option already has secondary currency conversion
             if ($option.find('.eur-price').length > 0) {
                 return;
             }
@@ -334,23 +442,36 @@
                     var $this = $(this);
                     var text = $this.text().trim();
                     
-                    // Skip if no price, already has EUR, or is free shipping
-                    if (!text || text.indexOf(eurLabel) !== -1 || text.toLowerCase().indexOf('безплатно') !== -1 || text.toLowerCase().indexOf('free') !== -1) {
+                    // Skip if no price, already has secondary currency, or is free shipping
+                    if (!text || text.indexOf(secondaryLabel) !== -1 || text.toLowerCase().indexOf('безплатно') !== -1 || text.toLowerCase().indexOf('free') !== -1) {
                         return;
                     }
                     
-                    // Match BGN price pattern
-                    var priceMatch = text.match(/(\d+(?:[,\s.]\d{3})*[,]\d{2})\s*(?:лв\.|BGN)?/);
+                    // Match price pattern based on primary currency
+                    var pricePattern;
+                    if (primaryCurrency === 'BGN') {
+                        pricePattern = /(\d+(?:[,\s.]\d{3})*[,]\d{2})\s*(?:лв\.|BGN)?/;
+                    } else {
+                        pricePattern = /(?:€\s*)?(\d+(?:[,\s.]\d{3})*[,]\d{2})\s*(?:€|EUR)?/;
+                    }
+                    
+                    var priceMatch = text.match(pricePattern);
                     if (priceMatch) {
-                        var priceBgn = priceMatch[1].replace(/\s/g, '').replace(',', '.');
-                        var priceEur = (parseFloat(priceBgn) / conversionRate).toFixed(2);
-                        var eurFormatted = formatEurPrice(priceEur);
-                        var eurSpan = '<span class="eur-price">' + eurFormatted + '</span>';
+                        var pricePrimary = priceMatch[1].replace(/\s/g, '').replace(',', '.');
+                        var priceSecondary = convertToSecondary(pricePrimary);
+                        var secondaryFormatted = formatSecondaryPrice(priceSecondary);
+                        var secondarySpan = '<span class="eur-price">' + secondaryFormatted + '</span>';
                         
-                        if (eurPosition === 'left') {
-                            $this.before(eurSpan + ' ');
+                        // When EUR is the site currency, always show EUR first (it's the primary)
+                        // When BGN is the site currency, respect the eurPosition setting
+                        if (primaryCurrency === 'EUR') {
+                            // EUR is primary, so always add BGN (secondary) after
+                            $this.after(' ' + secondarySpan);
+                        } else if (eurPosition === 'left') {
+                            // BGN is primary, EUR can go before or after based on setting
+                            $this.before(secondarySpan + ' ');
                         } else {
-                            $this.after(' ' + eurSpan);
+                            $this.after(' ' + secondarySpan);
                         }
                     }
                 });
@@ -373,23 +494,31 @@
                 }
             }
             
-            if (!hasEurPrice(this)) {
+            if (!hasSecondaryPrice(this)) {
                 var text = $this.text().trim();
                 
-                if (text && text.indexOf(eurLabel) === -1 && 
+                if (text && text.indexOf(secondaryLabel) === -1 && 
                     text.toLowerCase().indexOf('безплатно') === -1 && 
                     text.toLowerCase().indexOf('free') === -1) {
-                    var priceMatch = text.match(/(\d+(?:[,\s.]\d{3})*[,]\d{2})\s*(?:лв\.|BGN)?/);
+                    
+                    var pricePattern = getPricePattern();
+                    var priceMatch = text.match(pricePattern);
                     if (priceMatch) {
-                        var priceBgn = priceMatch[1].replace(/\s/g, '').replace(',', '.');
-                        var priceEur = (parseFloat(priceBgn) / conversionRate).toFixed(2);
-                        var eurFormatted = formatEurPrice(priceEur);
-                        var eurSpan = '<span class="eur-price">' + eurFormatted + '</span>';
+                        var pricePrimary = priceMatch[1].replace(/\s/g, '').replace(',', '.');
+                        var priceSecondary = convertToSecondary(pricePrimary);
+                        var secondaryFormatted = formatSecondaryPrice(priceSecondary);
+                        var secondarySpan = '<span class="eur-price">' + secondaryFormatted + '</span>';
                         
-                        if (eurPosition === 'left') {
-                            $this.before(eurSpan + ' ');
+                        // When EUR is the site currency, always show EUR first (it's the primary)
+                        // When BGN is the site currency, respect the eurPosition setting
+                        if (primaryCurrency === 'EUR') {
+                            // EUR is primary, so always add BGN (secondary) after
+                            $this.after(' ' + secondarySpan);
+                        } else if (eurPosition === 'left') {
+                            // BGN is primary, EUR can go before or after based on setting
+                            $this.before(secondarySpan + ' ');
                         } else {
-                            $this.after(' ' + eurSpan);
+                            $this.after(' ' + secondarySpan);
                         }
                     }
                 }
@@ -588,6 +717,7 @@
                 settings.url.indexOf('get_refreshed_fragments') > -1 ||
                 settings.url.indexOf('shipping') > -1 ||
                 settings.url.indexOf('speedy') > -1 ||
+                settings.url.indexOf('econt') > -1 ||
                 (settings.data && typeof settings.data === 'string' && settings.data.indexOf('shipping') > -1)
             )) {
                 setTimeout(function() {
@@ -613,19 +743,20 @@
         // Periodic check for stubborn dynamic updates (every 2 seconds on cart/checkout)
         if (document.querySelector('.woocommerce-cart, .woocommerce-checkout')) {
             setInterval(function() {
-                // Only run if there are shipping methods without EUR that should have EUR
+                // Only run if there are shipping methods without secondary currency that should have it
                 var needsUpdate = false;
                 $('#shipping_method li, .woocommerce-shipping-methods li').each(function() {
                     var $li = $(this);
                     var $priceSpan = $li.find('.woocommerce-Price-amount');
-                    var $eurSpan = $li.find('.eur-price');
+                    var $secondarySpan = $li.find('.eur-price');
                     var labelText = $li.find('label').text();
                     
-                    // Check if this should have EUR but doesn't
-                    if ($priceSpan.length > 0 && $eurSpan.length === 0 && 
-                        (!labelText || (labelText.indexOf('€') === -1 && labelText.indexOf('EUR') === -1))) {
+                    // Check if this should have secondary currency but doesn't
+                    if ($priceSpan.length > 0 && $secondarySpan.length === 0 && 
+                        (!labelText || labelText.indexOf(secondaryLabel) === -1)) {
                         var text = $priceSpan.text().trim();
-                        if (text && text.match(/\d+[,]\d{2}\s*(?:лв\.|BGN)?/)) {
+                        var pricePattern = getPricePattern();
+                        if (text && text.match(pricePattern)) {
                             needsUpdate = true;
                             return false; // Break out of each loop
                         }

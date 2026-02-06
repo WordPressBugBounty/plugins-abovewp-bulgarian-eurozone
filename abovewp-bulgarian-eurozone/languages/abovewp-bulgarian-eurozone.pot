@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: AboveWP Bulgarian Eurozone 1.1.0\n"
+"Project-Id-Version: AboveWP Bulgarian Eurozone 2.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/abovewp-bulgarian-eurozone\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-04-22T21:13:49+00:00\n"
+"POT-Creation-Date: 2025-11-21T14:09:13+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: abovewp-bulgarian-eurozone\n"
@@ -21,8 +21,32 @@ msgstr ""
 
 #. Description of the plugin
 #: abovewp-bulgarian-eurozone.php
-#: abovewp-bulgarian-eurozone.php:757
-msgid "Adds dual currency display (BGN and EUR) for WooCommerce as Bulgaria prepares to join the Eurozone"
+#: abovewp-bulgarian-eurozone.php:1440
+msgid "Adds bidirectional dual currency display (BGN ⇄ EUR) for WooCommerce as Bulgaria prepares to join the Eurozone"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:618
+msgid "BGN Price Rounding"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:621
+msgid "Keep exact decimals (e.g., 19.99 лв.)"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:622
+msgid "Round to exact decimal (e.g., 19.91 → 19.90 лв.)"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:624
+msgid "When the converted BGN price is within 0.015 of an exact decimal (e.g., 19.91 vs 19.90), choose whether to keep the calculated value or round to the nearest decimal."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:606
+msgid "Brackets (12.78 € (25лв.))"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:607
+msgid "Side divider (12.78 € / 25лв.)"
 msgstr ""
 
 #. Author of the plugin
@@ -37,179 +61,330 @@ msgstr ""
 msgid "https://abovewp.com"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:124
+#: abovewp-bulgarian-eurozone.php:181
 msgid "AboveWP Bulgarian Eurozone requires WooCommerce to be installed and active."
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:136
+#: abovewp-bulgarian-eurozone.php:208
+msgid "Ready for Bulgaria's Eurozone Transition?"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:209
+msgid "Use our Currency Migration tool to automatically convert all your product prices from BGN to EUR using the official rate."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:213
+#: abovewp-bulgarian-eurozone.php:1435
+msgid "Start Migration"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:241
 msgid "Settings"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:244
-#: abovewp-bulgarian-eurozone.php:342
+#: abovewp-bulgarian-eurozone.php:365
+#: abovewp-bulgarian-eurozone.php:475
 msgid "Bulgarian Eurozone Settings"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:245
+#: abovewp-bulgarian-eurozone.php:366
 msgid "Eurozone Settings"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:302
-#: abovewp-bulgarian-eurozone.php:398
+#: abovewp-bulgarian-eurozone.php:376
+#: abovewp-bulgarian-eurozone.php:377
+msgid "Currency Migration"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:435
+#: abovewp-bulgarian-eurozone.php:576
 msgid "Single product pages"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:303
-#: abovewp-bulgarian-eurozone.php:399
+#: abovewp-bulgarian-eurozone.php:436
+#: abovewp-bulgarian-eurozone.php:577
 msgid "Variable product pages"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:304
-#: abovewp-bulgarian-eurozone.php:400
+#: abovewp-bulgarian-eurozone.php:437
+#: abovewp-bulgarian-eurozone.php:578
 msgid "Cart item prices"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:305
-#: abovewp-bulgarian-eurozone.php:401
+#: abovewp-bulgarian-eurozone.php:438
+#: abovewp-bulgarian-eurozone.php:579
 msgid "Cart subtotals"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:306
-#: abovewp-bulgarian-eurozone.php:402
+#: abovewp-bulgarian-eurozone.php:439
+#: abovewp-bulgarian-eurozone.php:580
 msgid "Cart totals"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:307
-#: abovewp-bulgarian-eurozone.php:403
+#: abovewp-bulgarian-eurozone.php:440
+#: abovewp-bulgarian-eurozone.php:581
 msgid "Order confirmation & email"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:308
-#: abovewp-bulgarian-eurozone.php:404
+#: abovewp-bulgarian-eurozone.php:441
+#: abovewp-bulgarian-eurozone.php:582
 msgid "My Account orders table"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:309
-#: abovewp-bulgarian-eurozone.php:405
+#: abovewp-bulgarian-eurozone.php:442
+#: abovewp-bulgarian-eurozone.php:583
 msgid "REST API responses"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:310
-#: abovewp-bulgarian-eurozone.php:406
+#: abovewp-bulgarian-eurozone.php:443
+#: abovewp-bulgarian-eurozone.php:584
 msgid "Shipping method labels"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:311
-#: abovewp-bulgarian-eurozone.php:407
+#: abovewp-bulgarian-eurozone.php:444
+#: abovewp-bulgarian-eurozone.php:585
 msgid "Tax amount labels"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:312
-#: abovewp-bulgarian-eurozone.php:408
+#: abovewp-bulgarian-eurozone.php:445
+#: abovewp-bulgarian-eurozone.php:586
 msgid "Mini cart"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:313
-#: abovewp-bulgarian-eurozone.php:409
+#: abovewp-bulgarian-eurozone.php:446
+#: abovewp-bulgarian-eurozone.php:587
 msgid "Thank you / Order received page"
 msgstr ""
 
 #. Translators: %s is the name of the location where EUR price can be displayed (e.g. "Single product pages")
-#: abovewp-bulgarian-eurozone.php:327
+#: abovewp-bulgarian-eurozone.php:460
 msgid "Show EUR price on %s"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:347
-msgid "This plugin requires your WooCommerce currency to be set to Bulgarian Lev (BGN). The dual currency display will not work until you change your store currency to BGN."
+#: abovewp-bulgarian-eurozone.php:481
+msgid "Your store is currently using Bulgarian Lev (BGN) as the primary currency."
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:351
+#: abovewp-bulgarian-eurozone.php:482
+msgid "When Bulgaria joins the Eurozone, you can use our Currency Migration tool to seamlessly convert all prices to EUR."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:487
+msgid "Currency Migration Tool"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:496
+msgid "This plugin requires your WooCommerce currency to be set to either Bulgarian Lev (BGN) or Euro (EUR). The dual currency display will not work until you change your store currency to BGN or EUR."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:500
 msgid "Change Currency Settings"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:361
+#: abovewp-bulgarian-eurozone.php:507
+msgid "Your store currency is set to EUR. Bulgarian Lev (BGN) prices will be displayed alongside EUR prices."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:516
 msgid "General Settings"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:364
+#: abovewp-bulgarian-eurozone.php:519
 msgid "Enable Dual Currency Display"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:367
+#: abovewp-bulgarian-eurozone.php:522
 msgid "Yes"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:368
+#: abovewp-bulgarian-eurozone.php:523
 msgid "No"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:371
-msgid "Dual currency display is only available when your store currency is BGN."
+#: abovewp-bulgarian-eurozone.php:526
+msgid "Dual currency display is only available when your store currency is BGN or EUR."
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:383
-msgid "EUR Price Label"
+#: abovewp-bulgarian-eurozone.php:532
+msgid "Secondary Currency Position"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:386
-msgid "The label to use for EUR prices (default: €)"
+#: abovewp-bulgarian-eurozone.php:535
+msgid "Right of primary price"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:389
-msgid "EUR Price Position"
+#: abovewp-bulgarian-eurozone.php:536
+msgid "Left of primary price"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:392
-msgid "Right of BGN price"
+#: abovewp-bulgarian-eurozone.php:538
+msgid "Choose whether secondary currency appears on the left or right of primary currency"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:393
-msgid "Left of BGN price"
+#: abovewp-bulgarian-eurozone.php:542
+msgid "Secondary Currency Display Format"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:395
-msgid "Choose whether EUR prices appear on the left or right of BGN prices"
-msgstr ""
-
-#: abovewp-bulgarian-eurozone.php:400
-msgid "EUR Price Display Format"
-msgstr ""
-
-#: abovewp-bulgarian-eurozone.php:403
+#: abovewp-bulgarian-eurozone.php:546
 msgid "Brackets (25лв. (12.78 €))"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:404
+#: abovewp-bulgarian-eurozone.php:547
 msgid "Side divider (25лв. / 12.78 €)"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:406
-msgid "Choose how EUR prices are displayed relative to BGN prices"
+#: abovewp-bulgarian-eurozone.php:549
+msgid "Brackets (12.78 € (25лв.))"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:408
+#: abovewp-bulgarian-eurozone.php:550
+msgid "Side divider (12.78 € / 25лв.)"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:552
+msgid "Brackets"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:553
+msgid "Side divider"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:556
+msgid "Choose how secondary currency is displayed relative to primary currency"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:562
 msgid "Display Locations"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:409
+#: abovewp-bulgarian-eurozone.php:566
 msgid "Select where you want to display EUR prices:"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:419
+#: abovewp-bulgarian-eurozone.php:568
+msgid "Select where you want to display BGN prices:"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:599
 msgid "Show EUR price"
 msgstr ""
 
-#. Translators: %s is the currency label (EUR)
-#: abovewp-bulgarian-eurozone.php:633
+#: abovewp-bulgarian-eurozone.php:601
+msgid "Show BGN price"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:603
+msgid "Show secondary currency"
+msgstr ""
+
+#. Translators: %s is the currency label (EUR or BGN)
+#: abovewp-bulgarian-eurozone.php:1201
 msgid "Total (%s)"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:756
+#: abovewp-bulgarian-eurozone.php:1345
 msgid "Bulgarian Eurozone"
 msgstr ""
 
-#: abovewp-bulgarian-eurozone.php:759
+#: abovewp-bulgarian-eurozone.php:1348
 msgid "Configure"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1365
+msgid "Currency Migration: BGN to EUR"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1369
+msgid "Automatically convert all your product prices from Bulgarian Lev (BGN) to Euro (EUR) using the official exchange rate."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1375
+msgid "Currency migration is only available when your store currency is set to BGN."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1379
+msgid "Back to Settings"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1388
+msgid "Important: Read Before Starting"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1391
+msgid "This process will convert ALL product prices from BGN to EUR using the official rate (1.95583 BGN = 1 EUR)."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1392
+msgid "It will also change your WooCommerce store currency to EUR."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1393
+msgid "This includes regular prices, sale prices, and all product variations."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1394
+msgid "BACKUP YOUR DATABASE BEFORE PROCEEDING!"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1395
+msgid "The process runs in batches to handle stores with thousands of products."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1402
+msgid "Migration Progress"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1415
+msgid "Migration Complete!"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1418
+msgid "All product prices have been successfully converted to EUR."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1423
+msgid "View Currency Settings"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1427
+msgid "View Products"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1438
+msgid "Click the button below to start the currency migration process. Make sure you have read all the warnings above and have backed up your database."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1444
+msgid "Start Migration to EUR"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1447
+msgid "Cancel"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1462
+msgid "Are you sure you want to start the migration? This will convert all prices from BGN to EUR. Make sure you have a database backup!"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1484
+#: abovewp-bulgarian-eurozone.php:1518
+msgid "Error:"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1489
+msgid "Failed to get product count"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1523
+msgid "Failed to process batch"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1543
+msgid "Error finalizing migration:"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php:1548
+msgid "Failed to finalize migration"
 msgstr ""
 
 #: includes/class-abovewp-admin-menu.php:83
@@ -220,4 +395,50 @@ msgstr ""
 #: includes/class-abovewp-admin-menu.php:88
 msgctxt "abovewp"
 msgid "Available Plugins"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Unauthorized"
+msgstr ""
+
+#. translators: %1$d is the product ID, %2$s is the error message
+#: abovewp-bulgarian-eurozone.php
+msgid "Product #%1$d: %2$s"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Product could not be loaded"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Some products had issues:"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Failed to process batch."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "You can resume later from where it stopped."
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Migration Error"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Refresh and Resume"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Migration completed successfully"
+msgstr ""
+
+#. translators: %s is the error message
+#: abovewp-bulgarian-eurozone.php
+msgid "Failed to finalize migration: %s"
+msgstr ""
+
+#: abovewp-bulgarian-eurozone.php
+msgid "Migration progress reset"
 msgstr ""
