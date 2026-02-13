@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AboveWP Bulgarian Eurozone
  * Description: Adds bidirectional dual currency display (BGN ⇄ EUR) for WooCommerce as Bulgaria prepares to join the Eurozone
- * Version: 2.2.0
+ * Version: 2.2.1
  * Author: AboveWP
  * Author URI: https://abovewp.com
  * Text Domain: abovewp-bulgarian-eurozone
@@ -21,7 +21,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('ABOVEWP_BGE_VERSION', '2.1.1');
+define('ABOVEWP_BGE_VERSION', '2.2.1');
 define('ABOVEWP_BGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ABOVEWP_BGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -333,7 +333,7 @@ class AboveWP_Bulgarian_Eurozone {
         }
         
         if (get_option('abovewp_bge_show_tax_labels', 'yes') === 'yes') {
-            add_filter('woocommerce_order_tax_totals', array($this, 'add_eur_to_order_tax_totals'), 10, 2);
+            add_filter('woocommerce_order_get_tax_totals', array($this, 'add_eur_to_order_tax_totals'), 10, 2);
         }
 
         // Mini cart

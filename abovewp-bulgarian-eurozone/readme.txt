@@ -4,7 +4,7 @@ Tags: eurozone, bulgaria, currency, dual-currency, euro
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 WC requires at least: 5.0
@@ -101,6 +101,9 @@ Yes! The migration tool processes products in batches of 50, making it suitable 
 2. Settings Page Part 2
 
 == Changelog ==
+
+= 2.2.1 =
+* FIX: Replaced deprecated `woocommerce_order_tax_totals` filter with `woocommerce_order_get_tax_totals` (deprecated since WooCommerce 3.0)
 
 = 2.1.1 =
 * FIX: Shipping price display order now correctly shows EUR first when website currency is EUR (EUR → BGN conversion)
