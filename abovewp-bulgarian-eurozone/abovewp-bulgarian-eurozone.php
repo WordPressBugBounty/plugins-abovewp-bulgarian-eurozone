@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AboveWP Bulgarian Eurozone
  * Description: Adds bidirectional dual currency display (BGN ⇄ EUR) for WooCommerce as Bulgaria prepares to join the Eurozone
- * Version: 2.2.1
+ * Version: 2.3.0
  * Author: AboveWP
  * Author URI: https://abovewp.com
  * Text Domain: abovewp-bulgarian-eurozone
@@ -21,7 +21,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('ABOVEWP_BGE_VERSION', '2.2.1');
+define('ABOVEWP_BGE_VERSION', '2.3.0');
 define('ABOVEWP_BGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ABOVEWP_BGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -374,9 +374,15 @@ class AboveWP_Bulgarian_Eurozone {
         // Load on our plugin's admin pages
         if (strpos($hook, 'abovewp-bulgarian-eurozone') !== false || strpos($hook, 'abovewp-currency-migration') !== false) {
             wp_enqueue_style(
+                'abovewp-font-inter',
+                'https://fonts.bunny.net/css?family=inter:400,500,600,700',
+                array(),
+                null
+            );
+            wp_enqueue_style(
                 'abovewp-admin-default',
                 ABOVEWP_BGE_PLUGIN_URL . 'assets/css/admin-page-default.css',
-                array(),
+                array('abovewp-font-inter'),
                 ABOVEWP_BGE_VERSION
             );
         }
@@ -519,168 +525,213 @@ class AboveWP_Bulgarian_Eurozone {
      */
     public function settings_page() {
         ?>
-        <div class="abovewp-admin-page">
-            <div class="abovewp-admin-header">
-                <img src="<?php echo esc_url(ABOVEWP_BGE_PLUGIN_URL . 'assets/img/abovewp-logo.png'); ?>" alt="AboveWP" class="abovewp-logo">
+        <div class="abovewp-wrap">
+            <div class="abovewp-bg-effects">
+                <div class="abovewp-bg-orb abovewp-bg-orb-1"></div>
+                <div class="abovewp-bg-orb abovewp-bg-orb-2"></div>
             </div>
-            <h1><?php esc_html_e('Bulgarian Eurozone Settings', 'abovewp-bulgarian-eurozone'); ?></h1>
-            
-            <?php if ($this->is_site_currency_bgn()): ?>
-            <div class="abovewp-currency-notice">
-                <div class="abovewp-currency-notice-content">
-                    <span class="dashicons dashicons-info"></span>
-                    <div>
-                        <p class="abovewp-currency-notice-text">
-                            <strong><?php esc_html_e('Your store is currently using Bulgarian Lev (BGN) as the primary currency.', 'abovewp-bulgarian-eurozone'); ?></strong>
+            <div class="abovewp-container">
+                <header class="abovewp-header">
+                    <div class="abovewp-logo-section">
+                        <img src="<?php echo esc_url(ABOVEWP_BGE_PLUGIN_URL . 'assets/img/abovewp-logo.png'); ?>" alt="<?php esc_attr_e('AboveWP', 'abovewp-bulgarian-eurozone'); ?>" class="abovewp-logo">
+                        <span class="abovewp-badge">
+                            <span class="abovewp-badge-dot"></span>
+                            <?php esc_html_e('Bulgarian Eurozone', 'abovewp-bulgarian-eurozone'); ?>
+                        </span>
+                    </div>
+                </header>
+
+                <?php if ($this->is_site_currency_bgn()): ?>
+                <div class="abovewp-currency-notice">
+                    <div class="abovewp-currency-notice-content">
+                        <span class="dashicons dashicons-info"></span>
+                        <div>
+                            <p class="abovewp-currency-notice-text">
+                                <strong><?php esc_html_e('Your store is currently using Bulgarian Lev (BGN) as the primary currency.', 'abovewp-bulgarian-eurozone'); ?></strong>
+                            </p>
+                            <p class="abovewp-currency-notice-text">
+                                <?php esc_html_e('When Bulgaria joins the Eurozone, you can use our Currency Migration tool to seamlessly convert all prices to EUR.', 'abovewp-bulgarian-eurozone'); ?>
+                            </p>
+                        </div>
+                    </div>
+                    <p class="abovewp-currency-notice-actions">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-currency-migration')); ?>" class="button button-primary">
+                            <span class="dashicons dashicons-migrate"></span>
+                            <?php esc_html_e('Currency Migration Tool', 'abovewp-bulgarian-eurozone'); ?>
+                        </a>
+                    </p>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!$this->is_site_currency_supported()): ?>
+                <div class="abovewp-error-box">
+                    <p>
+                        <?php esc_html_e('This plugin requires your WooCommerce currency to be set to either Bulgarian Lev (BGN) or Euro (EUR). The dual currency display will not work until you change your store currency to BGN or EUR.', 'abovewp-bulgarian-eurozone'); ?>
+                    </p>
+                    <p>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=general')); ?>" class="button button-secondary">
+                            <?php esc_html_e('Change Currency Settings', 'abovewp-bulgarian-eurozone'); ?>
+                        </a>
+                    </p>
+                </div>
+                <?php elseif ($this->is_site_currency_eur()): ?>
+                <div class="abovewp-info-box">
+                    <p>
+                        <?php esc_html_e('Your store currency is set to EUR. Bulgarian Lev (BGN) prices will be displayed alongside EUR prices.', 'abovewp-bulgarian-eurozone'); ?>
+                    </p>
+                </div>
+                <?php endif; ?>
+
+                <form method="post" action="options.php">
+                    <?php settings_fields('abovewp_bge_settings'); ?>
+                    <?php do_settings_sections('abovewp_bge_settings'); ?>
+
+                    <div class="abovewp-section">
+                        <div class="abovewp-section-header">
+                            <h2 class="abovewp-section-title"><?php esc_html_e('General Settings', 'abovewp-bulgarian-eurozone'); ?></h2>
+                        </div>
+                        <table class="form-table">
+                            <tr valign="top">
+                                <th scope="row"><?php esc_html_e('Enable Dual Currency Display', 'abovewp-bulgarian-eurozone'); ?></th>
+                                <td>
+                                    <select name="abovewp_bge_enabled" <?php disabled(!$this->is_site_currency_supported()); ?>>
+                                        <option value="yes" <?php selected(get_option('abovewp_bge_enabled', 'yes'), 'yes'); ?>><?php esc_html_e('Yes', 'abovewp-bulgarian-eurozone'); ?></option>
+                                        <option value="no" <?php selected(get_option('abovewp_bge_enabled', 'yes'), 'no'); ?>><?php esc_html_e('No', 'abovewp-bulgarian-eurozone'); ?></option>
+                                    </select>
+                                    <?php if (!$this->is_site_currency_supported()): ?>
+                                        <p class="description"><?php esc_html_e('Dual currency display is only available when your store currency is BGN or EUR.', 'abovewp-bulgarian-eurozone'); ?></p>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+
+                            <tr valign="top">
+                                <th scope="row"><?php esc_html_e('Secondary Currency Position', 'abovewp-bulgarian-eurozone'); ?></th>
+                                <td>
+                                    <select name="abovewp_bge_eur_position" <?php disabled(!$this->is_site_currency_supported()); ?>>
+                                        <option value="right" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'right'); ?>><?php esc_html_e('Right of primary price', 'abovewp-bulgarian-eurozone'); ?></option>
+                                        <option value="left" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'left'); ?>><?php esc_html_e('Left of primary price', 'abovewp-bulgarian-eurozone'); ?></option>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Choose whether secondary currency appears on the left or right of primary currency', 'abovewp-bulgarian-eurozone'); ?></p>
+                                </td>
+                            </tr>
+                            <tr valign="top">
+                                <th scope="row"><?php esc_html_e('Secondary Currency Display Format', 'abovewp-bulgarian-eurozone'); ?></th>
+                                <td>
+                                    <select name="abovewp_bge_eur_format" <?php disabled(!$this->is_site_currency_supported()); ?>>
+                                        <?php if ($this->is_site_currency_bgn()): ?>
+                                            <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets (25лв. (12.78 €))', 'abovewp-bulgarian-eurozone'); ?></option>
+                                            <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider (25лв. / 12.78 €)', 'abovewp-bulgarian-eurozone'); ?></option>
+                                        <?php elseif ($this->is_site_currency_eur()): ?>
+                                            <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets (12.78 € (25лв.))', 'abovewp-bulgarian-eurozone'); ?></option>
+                                            <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider (12.78 € / 25лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
+                                        <?php else: ?>
+                                            <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets', 'abovewp-bulgarian-eurozone'); ?></option>
+                                            <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider', 'abovewp-bulgarian-eurozone'); ?></option>
+                                        <?php endif; ?>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Choose how secondary currency is displayed relative to primary currency', 'abovewp-bulgarian-eurozone'); ?></p>
+                                </td>
+                            </tr>
+                            <?php if ($this->is_site_currency_eur()): ?>
+                            <tr valign="top">
+                                <th scope="row"><?php esc_html_e('BGN Price Rounding', 'abovewp-bulgarian-eurozone'); ?></th>
+                                <td>
+                                    <select name="abovewp_bge_bgn_rounding">
+                                        <option value="exact" <?php selected(get_option('abovewp_bge_bgn_rounding', 'smart'), 'exact'); ?>><?php esc_html_e('Keep exact decimals (e.g., 19.99 лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
+                                        <option value="smart" <?php selected(get_option('abovewp_bge_bgn_rounding', 'smart'), 'smart'); ?>><?php esc_html_e('Round to exact decimal (e.g., 19.91 → 19.90 лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('When the converted BGN price is within 0.015 of an exact decimal (e.g., 19.91 vs 19.90), choose whether to keep the calculated value or round to the nearest decimal.', 'abovewp-bulgarian-eurozone'); ?></p>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
+                        </table>
+                    </div>
+
+                    <?php if ($this->is_site_currency_supported()): ?>
+                    <div class="abovewp-section">
+                        <div class="abovewp-section-header">
+                            <h2 class="abovewp-section-title"><?php esc_html_e('Display Locations', 'abovewp-bulgarian-eurozone'); ?></h2>
+                        </div>
+                        <p class="description">
+                            <?php
+                            if ($this->is_site_currency_bgn()) {
+                                esc_html_e('Select where you want to display EUR prices:', 'abovewp-bulgarian-eurozone');
+                            } elseif ($this->is_site_currency_eur()) {
+                                esc_html_e('Select where you want to display BGN prices:', 'abovewp-bulgarian-eurozone');
+                            }
+                            ?>
                         </p>
-                        <p class="abovewp-currency-notice-text">
-                            <?php esc_html_e('When Bulgaria joins the Eurozone, you can use our Currency Migration tool to seamlessly convert all prices to EUR.', 'abovewp-bulgarian-eurozone'); ?>
-                        </p>
+
+                        <table class="form-table">
+                            <?php
+                            $display_locations = array(
+                                'single_product' => esc_html__('Single product pages', 'abovewp-bulgarian-eurozone'),
+                                'variable_product' => esc_html__('Variable product pages', 'abovewp-bulgarian-eurozone'),
+                                'cart_item' => esc_html__('Cart item prices', 'abovewp-bulgarian-eurozone'),
+                                'cart_subtotal' => esc_html__('Cart subtotals', 'abovewp-bulgarian-eurozone'),
+                                'cart_total' => esc_html__('Cart totals', 'abovewp-bulgarian-eurozone'),
+                                'order_totals' => esc_html__('Order confirmation & email', 'abovewp-bulgarian-eurozone'),
+                                'orders_table' => esc_html__('My Account orders table', 'abovewp-bulgarian-eurozone'),
+                                'api_prices' => esc_html__('REST API responses', 'abovewp-bulgarian-eurozone'),
+                                'shipping_labels' => esc_html__('Shipping method labels', 'abovewp-bulgarian-eurozone'),
+                                'tax_labels' => esc_html__('Tax amount labels', 'abovewp-bulgarian-eurozone'),
+                                'mini_cart' => esc_html__('Mini cart', 'abovewp-bulgarian-eurozone'),
+                                'thank_you_page' => esc_html__('Thank you / Order received page', 'abovewp-bulgarian-eurozone')
+                            );
+
+                            foreach ($display_locations as $key => $label) :
+                            ?>
+                            <tr valign="top">
+                                <th scope="row"><?php echo esc_html($label); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="abovewp_bge_show_<?php echo esc_attr($key); ?>" value="yes" <?php checked(get_option('abovewp_bge_show_' . $key, 'yes'), 'yes'); ?> />
+                                        <?php
+                                        if ($this->is_site_currency_bgn()) {
+                                            esc_html_e('Show EUR price', 'abovewp-bulgarian-eurozone');
+                                        } elseif ($this->is_site_currency_eur()) {
+                                            esc_html_e('Show BGN price', 'abovewp-bulgarian-eurozone');
+                                        } else {
+                                            esc_html_e('Show secondary currency', 'abovewp-bulgarian-eurozone');
+                                        }
+                                        ?>
+                                    </label>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php submit_button(null, 'primary', 'submit', true, $this->is_site_currency_supported() ? [] : ['disabled' => 'disabled']); ?>
+                </form>
+
+                <div class="abovewp-ai-banner">
+                    <div class="abovewp-ai-banner-content">
+                        <div class="abovewp-ai-banner-text">
+                            <h3><?php esc_html_e('Stop babysitting your WordPress sites', 'abovewp-bulgarian-eurozone'); ?></h3>
+                            <p><?php esc_html_e('Hire AI agents that work 24/7 so you don\'t have to. Automation, updates, backups, security, performance, content — handled automatically while you sleep.', 'abovewp-bulgarian-eurozone'); ?></p>
+                            <div class="abovewp-ai-banner-perks">
+                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('15 free credits at launch', 'abovewp-bulgarian-eurozone'); ?></span>
+                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('First 500 users lock in beta pricing forever', 'abovewp-bulgarian-eurozone'); ?></span>
+                            </div>
+                        </div>
+                        <div class="abovewp-ai-banner-actions">
+                            <a href="https://abovewp.com/prelaunch" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-primary"><?php esc_html_e('Sign Up for Prelaunch', 'abovewp-bulgarian-eurozone'); ?></a>
+                            <a href="https://abovewp.com/prelaunch/agencies" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-secondary"><?php esc_html_e('Agency Partner Program', 'abovewp-bulgarian-eurozone'); ?></a>
+                        </div>
                     </div>
                 </div>
-                <p class="abovewp-currency-notice-actions">
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-currency-migration')); ?>" class="button button-primary">
-                        <span class="dashicons dashicons-migrate"></span>
-                        <?php esc_html_e('Currency Migration Tool', 'abovewp-bulgarian-eurozone'); ?>
-                    </a>
-                </p>
-            </div>
-            <?php endif; ?>
-            
-            <?php if (!$this->is_site_currency_supported()): ?>
-            <div class="abovewp-error-box">
-                <p>
-                    <?php esc_html_e('This plugin requires your WooCommerce currency to be set to either Bulgarian Lev (BGN) or Euro (EUR). The dual currency display will not work until you change your store currency to BGN or EUR.', 'abovewp-bulgarian-eurozone'); ?>
-                </p>
-                <p>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=general')); ?>" class="button button-secondary">
-                        <?php esc_html_e('Change Currency Settings', 'abovewp-bulgarian-eurozone'); ?>
-                    </a>
-                </p>
-            </div>
-            <?php elseif ($this->is_site_currency_eur()): ?>
-            <div class="abovewp-info-box">
-                <p>
-                    <?php esc_html_e('Your store currency is set to EUR. Bulgarian Lev (BGN) prices will be displayed alongside EUR prices.', 'abovewp-bulgarian-eurozone'); ?>
-                </p>
-            </div>
-            <?php endif; ?>
-            
-            <form method="post" action="options.php">
-                <?php settings_fields('abovewp_bge_settings'); ?>
-                <?php do_settings_sections('abovewp_bge_settings'); ?>
-                
-                <h2><?php esc_html_e('General Settings', 'abovewp-bulgarian-eurozone'); ?></h2>
-                <table class="form-table">
-                    <tr valign="top">
-                        <th scope="row"><?php esc_html_e('Enable Dual Currency Display', 'abovewp-bulgarian-eurozone'); ?></th>
-                        <td>
-                            <select name="abovewp_bge_enabled" <?php disabled(!$this->is_site_currency_supported()); ?>>
-                                <option value="yes" <?php selected(get_option('abovewp_bge_enabled', 'yes'), 'yes'); ?>><?php esc_html_e('Yes', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <option value="no" <?php selected(get_option('abovewp_bge_enabled', 'yes'), 'no'); ?>><?php esc_html_e('No', 'abovewp-bulgarian-eurozone'); ?></option>
-                            </select>
-                            <?php if (!$this->is_site_currency_supported()): ?>
-                                <p class="description"><?php esc_html_e('Dual currency display is only available when your store currency is BGN or EUR.', 'abovewp-bulgarian-eurozone'); ?></p>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
 
-                    <tr valign="top">
-                        <th scope="row"><?php esc_html_e('Secondary Currency Position', 'abovewp-bulgarian-eurozone'); ?></th>
-                        <td>
-                            <select name="abovewp_bge_eur_position" <?php disabled(!$this->is_site_currency_supported()); ?>>
-                                <option value="right" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'right'); ?>><?php esc_html_e('Right of primary price', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <option value="left" <?php selected(get_option('abovewp_bge_eur_position', 'right'), 'left'); ?>><?php esc_html_e('Left of primary price', 'abovewp-bulgarian-eurozone'); ?></option>
-                            </select>
-                            <p class="description"><?php esc_html_e('Choose whether secondary currency appears on the left or right of primary currency', 'abovewp-bulgarian-eurozone'); ?></p>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row"><?php esc_html_e('Secondary Currency Display Format', 'abovewp-bulgarian-eurozone'); ?></th>
-                        <td>
-                            <select name="abovewp_bge_eur_format" <?php disabled(!$this->is_site_currency_supported()); ?>>
-                                <?php if ($this->is_site_currency_bgn()): ?>
-                                    <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets (25лв. (12.78 €))', 'abovewp-bulgarian-eurozone'); ?></option>
-                                    <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider (25лв. / 12.78 €)', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <?php elseif ($this->is_site_currency_eur()): ?>
-                                    <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets (12.78 € (25лв.))', 'abovewp-bulgarian-eurozone'); ?></option>
-                                    <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider (12.78 € / 25лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <?php else: ?>
-                                    <option value="brackets" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'brackets'); ?>><?php esc_html_e('Brackets', 'abovewp-bulgarian-eurozone'); ?></option>
-                                    <option value="divider" <?php selected(get_option('abovewp_bge_eur_format', 'brackets'), 'divider'); ?>><?php esc_html_e('Side divider', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <?php endif; ?>
-                            </select>
-                            <p class="description"><?php esc_html_e('Choose how secondary currency is displayed relative to primary currency', 'abovewp-bulgarian-eurozone'); ?></p>
-                        </td>
-                    </tr>
-                    <?php if ($this->is_site_currency_eur()): ?>
-                    <tr valign="top">
-                        <th scope="row"><?php esc_html_e('BGN Price Rounding', 'abovewp-bulgarian-eurozone'); ?></th>
-                        <td>
-                            <select name="abovewp_bge_bgn_rounding">
-                                <option value="exact" <?php selected(get_option('abovewp_bge_bgn_rounding', 'smart'), 'exact'); ?>><?php esc_html_e('Keep exact decimals (e.g., 19.99 лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
-                                <option value="smart" <?php selected(get_option('abovewp_bge_bgn_rounding', 'smart'), 'smart'); ?>><?php esc_html_e('Round to exact decimal (e.g., 19.91 → 19.90 лв.)', 'abovewp-bulgarian-eurozone'); ?></option>
-                            </select>
-                            <p class="description"><?php esc_html_e('When the converted BGN price is within 0.015 of an exact decimal (e.g., 19.91 vs 19.90), choose whether to keep the calculated value or round to the nearest decimal.', 'abovewp-bulgarian-eurozone'); ?></p>
-                        </td>
-                    </tr>
-                    <?php endif; ?>
-                </table>
-                
-                <?php if ($this->is_site_currency_supported()): ?>
-                <h2><?php esc_html_e('Display Locations', 'abovewp-bulgarian-eurozone'); ?></h2>
-                <p class="description">
-                    <?php 
-                    if ($this->is_site_currency_bgn()) {
-                        esc_html_e('Select where you want to display EUR prices:', 'abovewp-bulgarian-eurozone');
-                    } elseif ($this->is_site_currency_eur()) {
-                        esc_html_e('Select where you want to display BGN prices:', 'abovewp-bulgarian-eurozone');
-                    }
-                    ?>
-                </p>
-                
-                <table class="form-table">
-                    <?php
-                    $display_locations = array(
-                        'single_product' => esc_html__('Single product pages', 'abovewp-bulgarian-eurozone'),
-                        'variable_product' => esc_html__('Variable product pages', 'abovewp-bulgarian-eurozone'),
-                        'cart_item' => esc_html__('Cart item prices', 'abovewp-bulgarian-eurozone'),
-                        'cart_subtotal' => esc_html__('Cart subtotals', 'abovewp-bulgarian-eurozone'),
-                        'cart_total' => esc_html__('Cart totals', 'abovewp-bulgarian-eurozone'),
-                        'order_totals' => esc_html__('Order confirmation & email', 'abovewp-bulgarian-eurozone'),
-                        'orders_table' => esc_html__('My Account orders table', 'abovewp-bulgarian-eurozone'),
-                        'api_prices' => esc_html__('REST API responses', 'abovewp-bulgarian-eurozone'),
-                        'shipping_labels' => esc_html__('Shipping method labels', 'abovewp-bulgarian-eurozone'),
-                        'tax_labels' => esc_html__('Tax amount labels', 'abovewp-bulgarian-eurozone'),
-                        'mini_cart' => esc_html__('Mini cart', 'abovewp-bulgarian-eurozone'),
-                        'thank_you_page' => esc_html__('Thank you / Order received page', 'abovewp-bulgarian-eurozone')
-                    );
-                    
-                    foreach ($display_locations as $key => $label) :
-                    ?>
-                    <tr valign="top">
-                        <th scope="row"><?php echo esc_html($label); ?></th>
-                        <td>
-                            <label>
-                                <input type="checkbox" name="abovewp_bge_show_<?php echo esc_attr($key); ?>" value="yes" <?php checked(get_option('abovewp_bge_show_' . $key, 'yes'), 'yes'); ?> />
-                                <?php 
-                                if ($this->is_site_currency_bgn()) {
-                                    esc_html_e('Show EUR price', 'abovewp-bulgarian-eurozone');
-                                } elseif ($this->is_site_currency_eur()) {
-                                    esc_html_e('Show BGN price', 'abovewp-bulgarian-eurozone');
-                                } else {
-                                    esc_html_e('Show secondary currency', 'abovewp-bulgarian-eurozone');
-                                }
-                                ?>
-                            </label>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </table>
-                <?php endif; ?>
-                
-                <?php submit_button(null, 'primary', 'submit', true, $this->is_site_currency_supported() ? [] : ['disabled' => 'disabled']); ?>
-            </form>
+                <footer class="abovewp-footer">
+                    <div class="abovewp-footer-links">
+                        <a href="https://abovewp.com" target="_blank"><?php esc_html_e('Website', 'abovewp-bulgarian-eurozone'); ?></a>
+                        <a href="https://abovewp.com/support" target="_blank"><?php esc_html_e('Support', 'abovewp-bulgarian-eurozone'); ?></a>
+                        <a href="https://profiles.wordpress.org/wpabove/#content-plugins" target="_blank"><?php esc_html_e('Check our other plugins', 'abovewp-bulgarian-eurozone'); ?></a>
+                    </div>
+                    <p class="abovewp-footer-copy">&copy; <?php echo esc_html(gmdate('Y')); ?> AboveWP</p>
+                </footer>
+            </div>
         </div>
         <?php
     }
@@ -1450,143 +1501,184 @@ class AboveWP_Bulgarian_Eurozone {
      */
     public function migration_page() {
         ?>
-        <div class="abovewp-admin-page">
-            <div class="abovewp-admin-header">
-                <img src="<?php echo esc_url(ABOVEWP_BGE_PLUGIN_URL . 'assets/img/abovewp-logo.png'); ?>" alt="AboveWP" class="abovewp-logo">
+        <div class="abovewp-wrap">
+            <div class="abovewp-bg-effects">
+                <div class="abovewp-bg-orb abovewp-bg-orb-1"></div>
+                <div class="abovewp-bg-orb abovewp-bg-orb-2"></div>
             </div>
-            <h1 class="abovewp-migration-title">
-                <span class="dashicons dashicons-update"></span>
-                <?php esc_html_e('Currency Migration: BGN to EUR', 'abovewp-bulgarian-eurozone'); ?>
-            </h1>
-            
-            <p class="abovewp-migration-description">
-                <?php esc_html_e('Automatically convert all your product prices from Bulgarian Lev (BGN) to Euro (EUR) using the official exchange rate.', 'abovewp-bulgarian-eurozone'); ?>
-            </p>
-            
-            <?php if (!$this->is_site_currency_bgn()): ?>
-            <div class="notice notice-error">
-                <p>
-                    <strong><?php esc_html_e('Currency migration is only available when your store currency is set to BGN.', 'abovewp-bulgarian-eurozone'); ?></strong>
-                </p>
-                <p>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button">
-                        <?php esc_html_e('Back to Settings', 'abovewp-bulgarian-eurozone'); ?>
-                    </a>
-                </p>
-            </div>
-            <?php return; endif; ?>
-            
-            <div class="abovewp-warning-box">
-                <h3 class="abovewp-warning-title">
-                    <span class="dashicons dashicons-warning"></span>
-                    <?php esc_html_e('Important: Read Before Starting', 'abovewp-bulgarian-eurozone'); ?>
-                </h3>
-                <ul class="abovewp-warning-list">
-                    <li><?php esc_html_e('This process will convert ALL product prices from BGN to EUR using the official rate (1.95583 BGN = 1 EUR).', 'abovewp-bulgarian-eurozone'); ?></li>
-                    <li><?php esc_html_e('It will also change your WooCommerce store currency to EUR.', 'abovewp-bulgarian-eurozone'); ?></li>
-                    <li><?php esc_html_e('This includes regular prices, sale prices, and all product variations.', 'abovewp-bulgarian-eurozone'); ?></li>
-                    <li class="abovewp-warning-critical"><?php esc_html_e('BACKUP YOUR DATABASE BEFORE PROCEEDING!', 'abovewp-bulgarian-eurozone'); ?></li>
-                    <li><?php esc_html_e('The process runs in batches to handle stores with thousands of products.', 'abovewp-bulgarian-eurozone'); ?></li>
-                </ul>
-            </div>
-            
-            <div id="migration-status" class="abovewp-migration-status">
-                <h3 class="abovewp-migration-progress-title">
-                    <span class="dashicons dashicons-update-alt dashicons-spin"></span>
-                    <?php esc_html_e('Migration Progress', 'abovewp-bulgarian-eurozone'); ?>
-                </h3>
-                <div class="abovewp-progress-wrapper">
-                    <div class="abovewp-progress-bar-container">
-                        <div id="progress-bar" class="abovewp-progress-bar"></div>
+            <div class="abovewp-container">
+                <header class="abovewp-header">
+                    <div class="abovewp-logo-section">
+                        <img src="<?php echo esc_url(ABOVEWP_BGE_PLUGIN_URL . 'assets/img/abovewp-logo.png'); ?>" alt="<?php esc_attr_e('AboveWP', 'abovewp-bulgarian-eurozone'); ?>" class="abovewp-logo">
+                        <span class="abovewp-badge">
+                            <span class="abovewp-badge-dot"></span>
+                            <?php esc_html_e('Currency Migration', 'abovewp-bulgarian-eurozone'); ?>
+                        </span>
                     </div>
-                    <p id="progress-text" class="abovewp-progress-text">0%</p>
+                </header>
+
+                <h1 class="abovewp-migration-title">
+                    <span class="dashicons dashicons-update"></span>
+                    <?php esc_html_e('Currency Migration: BGN to EUR', 'abovewp-bulgarian-eurozone'); ?>
+                </h1>
+
+                <p class="abovewp-migration-description">
+                    <?php esc_html_e('Automatically convert all your product prices from Bulgarian Lev (BGN) to Euro (EUR) using the official exchange rate.', 'abovewp-bulgarian-eurozone'); ?>
+                </p>
+
+                <?php if (!$this->is_site_currency_bgn()): ?>
+                <div class="notice notice-error">
+                    <p>
+                        <strong><?php esc_html_e('Currency migration is only available when your store currency is set to BGN.', 'abovewp-bulgarian-eurozone'); ?></strong>
+                    </p>
+                    <p>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button">
+                            <?php esc_html_e('Back to Settings', 'abovewp-bulgarian-eurozone'); ?>
+                        </a>
+                    </p>
                 </div>
-                <div id="migration-warnings"></div>
-            </div>
-            
-            <div id="migration-error" class="abovewp-error-box" style="display: none;">
-                <h3 class="abovewp-error-title">
-                    <span class="dashicons dashicons-warning"></span>
-                    <?php esc_html_e('Migration Error', 'abovewp-bulgarian-eurozone'); ?>
-                </h3>
-                <p id="migration-error-message"></p>
-                <p>
-                    <button onclick="location.reload();" class="button button-primary">
-                        <?php esc_html_e('Refresh and Resume', 'abovewp-bulgarian-eurozone'); ?>
-                    </button>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button button-secondary">
-                        <?php esc_html_e('Back to Settings', 'abovewp-bulgarian-eurozone'); ?>
-                    </a>
-                </p>
-            </div>
-            
-            <div id="migration-complete" class="abovewp-success-box">
-                <h3 class="abovewp-success-title">
-                    <span class="dashicons dashicons-yes-alt"></span>
-                    <?php esc_html_e('Migration Complete!', 'abovewp-bulgarian-eurozone'); ?>
-                </h3>
-                <p class="abovewp-success-text">
-                    <?php esc_html_e('All product prices have been successfully converted to EUR.', 'abovewp-bulgarian-eurozone'); ?>
-                </p>
-                <p>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=general')); ?>" class="button button-primary">
-                        <span class="dashicons dashicons-admin-settings"></span>
-                        <?php esc_html_e('View Currency Settings', 'abovewp-bulgarian-eurozone'); ?>
-                    </a>
-                    <a href="<?php echo esc_url(admin_url('edit.php?post_type=product')); ?>" class="button button-secondary">
-                        <span class="dashicons dashicons-products"></span>
-                        <?php esc_html_e('View Products', 'abovewp-bulgarian-eurozone'); ?>
-                    </a>
-                </p>
-            </div>
-            
-            <?php
-            $migration_in_progress = get_option('abovewp_bge_migration_in_progress', false);
-            $migration_offset = (int) get_option('abovewp_bge_migration_offset', 0);
-            $migration_total = (int) get_option('abovewp_bge_migration_total', 0);
-            ?>
+                <?php return; endif; ?>
 
-            <?php if ($migration_in_progress && $migration_offset > 0): ?>
-            <div id="migration-resume" class="abovewp-resume-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px;">
-                <h3 style="margin-top: 0;">
-                    <span class="dashicons dashicons-info"></span>
-                    <?php esc_html_e('Migration In Progress', 'abovewp-bulgarian-eurozone'); ?>
-                </h3>
-                <p>
-                    <?php printf(esc_html__('A previous migration was interrupted. Progress: %d of %d products processed.', 'abovewp-bulgarian-eurozone'), $migration_offset, $migration_total); ?>
-                </p>
-                <p>
-                    <button id="resume-migration" class="button button-primary">
-                        <?php esc_html_e('Resume Migration', 'abovewp-bulgarian-eurozone'); ?>
-                    </button>
-                    <button id="reset-migration" class="button button-secondary">
-                        <?php esc_html_e('Start Over', 'abovewp-bulgarian-eurozone'); ?>
-                    </button>
-                </p>
-            </div>
-            <?php endif; ?>
+                <div class="abovewp-section">
+                    <div class="abovewp-warning-box">
+                        <h3 class="abovewp-warning-title">
+                            <span class="dashicons dashicons-warning"></span>
+                            <?php esc_html_e('Important: Read Before Starting', 'abovewp-bulgarian-eurozone'); ?>
+                        </h3>
+                        <ul class="abovewp-warning-list">
+                            <li><?php esc_html_e('This process will convert ALL product prices from BGN to EUR using the official rate (1.95583 BGN = 1 EUR).', 'abovewp-bulgarian-eurozone'); ?></li>
+                            <li><?php esc_html_e('It will also change your WooCommerce store currency to EUR.', 'abovewp-bulgarian-eurozone'); ?></li>
+                            <li><?php esc_html_e('This includes regular prices, sale prices, and all product variations.', 'abovewp-bulgarian-eurozone'); ?></li>
+                            <li class="abovewp-warning-critical"><?php esc_html_e('BACKUP YOUR DATABASE BEFORE PROCEEDING!', 'abovewp-bulgarian-eurozone'); ?></li>
+                            <li><?php esc_html_e('The process runs in batches to handle stores with thousands of products.', 'abovewp-bulgarian-eurozone'); ?></li>
+                        </ul>
+                    </div>
 
-            <div id="migration-controls" class="abovewp-migration-controls" <?php echo ($migration_in_progress && $migration_offset > 0) ? 'style="display:none;"' : ''; ?>>
-                <h2 class="abovewp-migration-controls-title">
-                    <span class="dashicons dashicons-migrate"></span>
-                    <?php esc_html_e('Start Migration', 'abovewp-bulgarian-eurozone'); ?>
-                </h2>
-                <p class="abovewp-migration-controls-text">
-                    <?php esc_html_e('Click the button below to start the currency migration process. Make sure you have read all the warnings above and have backed up your database.', 'abovewp-bulgarian-eurozone'); ?>
-                </p>
+                    <div id="migration-status" class="abovewp-migration-status">
+                        <h3 class="abovewp-migration-progress-title">
+                            <span class="dashicons dashicons-update-alt dashicons-spin"></span>
+                            <?php esc_html_e('Migration Progress', 'abovewp-bulgarian-eurozone'); ?>
+                        </h3>
+                        <div class="abovewp-progress-wrapper">
+                            <div class="abovewp-progress-bar-container">
+                                <div id="progress-bar" class="abovewp-progress-bar"></div>
+                            </div>
+                            <p id="progress-text" class="abovewp-progress-text">0%</p>
+                        </div>
+                        <div id="migration-warnings"></div>
+                    </div>
 
-                <p class="abovewp-migration-controls-buttons">
-                    <button id="start-migration" class="button button-primary button-hero">
-                        <span class="dashicons dashicons-update"></span>
-                        <?php esc_html_e('Start Migration to EUR', 'abovewp-bulgarian-eurozone'); ?>
-                    </button>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button button-secondary button-hero">
-                        <?php esc_html_e('Cancel', 'abovewp-bulgarian-eurozone'); ?>
-                    </a>
-                </p>
+                    <div id="migration-error" class="abovewp-error-box" style="display: none;">
+                        <h3 class="abovewp-error-title">
+                            <span class="dashicons dashicons-warning"></span>
+                            <?php esc_html_e('Migration Error', 'abovewp-bulgarian-eurozone'); ?>
+                        </h3>
+                        <p id="migration-error-message"></p>
+                        <p>
+                            <button onclick="location.reload();" class="button button-primary">
+                                <?php esc_html_e('Refresh and Resume', 'abovewp-bulgarian-eurozone'); ?>
+                            </button>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button button-secondary">
+                                <?php esc_html_e('Back to Settings', 'abovewp-bulgarian-eurozone'); ?>
+                            </a>
+                        </p>
+                    </div>
+
+                    <div id="migration-complete" class="abovewp-success-box">
+                        <h3 class="abovewp-success-title">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                            <?php esc_html_e('Migration Complete!', 'abovewp-bulgarian-eurozone'); ?>
+                        </h3>
+                        <p class="abovewp-success-text">
+                            <?php esc_html_e('All product prices have been successfully converted to EUR.', 'abovewp-bulgarian-eurozone'); ?>
+                        </p>
+                        <p>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=general')); ?>" class="button button-primary">
+                                <span class="dashicons dashicons-admin-settings"></span>
+                                <?php esc_html_e('View Currency Settings', 'abovewp-bulgarian-eurozone'); ?>
+                            </a>
+                            <a href="<?php echo esc_url(admin_url('edit.php?post_type=product')); ?>" class="button button-secondary">
+                                <span class="dashicons dashicons-products"></span>
+                                <?php esc_html_e('View Products', 'abovewp-bulgarian-eurozone'); ?>
+                            </a>
+                        </p>
+                    </div>
+
+                    <?php
+                    $migration_in_progress = get_option('abovewp_bge_migration_in_progress', false);
+                    $migration_offset = (int) get_option('abovewp_bge_migration_offset', 0);
+                    $migration_total = (int) get_option('abovewp_bge_migration_total', 0);
+                    ?>
+
+                    <?php if ($migration_in_progress && $migration_offset > 0): ?>
+                    <div id="migration-resume" class="abovewp-resume-box">
+                        <h3>
+                            <span class="dashicons dashicons-info"></span>
+                            <?php esc_html_e('Migration In Progress', 'abovewp-bulgarian-eurozone'); ?>
+                        </h3>
+                        <p>
+                            <?php printf(esc_html__('A previous migration was interrupted. Progress: %d of %d products processed.', 'abovewp-bulgarian-eurozone'), $migration_offset, $migration_total); ?>
+                        </p>
+                        <p>
+                            <button id="resume-migration" class="button button-primary">
+                                <?php esc_html_e('Resume Migration', 'abovewp-bulgarian-eurozone'); ?>
+                            </button>
+                            <button id="reset-migration" class="button button-secondary">
+                                <?php esc_html_e('Start Over', 'abovewp-bulgarian-eurozone'); ?>
+                            </button>
+                        </p>
+                    </div>
+                    <?php endif; ?>
+
+                    <div id="migration-controls" class="abovewp-migration-controls" <?php echo ($migration_in_progress && $migration_offset > 0) ? 'style="display:none;"' : ''; ?>>
+                        <h2 class="abovewp-migration-controls-title">
+                            <span class="dashicons dashicons-migrate"></span>
+                            <?php esc_html_e('Start Migration', 'abovewp-bulgarian-eurozone'); ?>
+                        </h2>
+                        <p class="abovewp-migration-controls-text">
+                            <?php esc_html_e('Click the button below to start the currency migration process. Make sure you have read all the warnings above and have backed up your database.', 'abovewp-bulgarian-eurozone'); ?>
+                        </p>
+
+                        <p class="abovewp-migration-controls-buttons">
+                            <button id="start-migration" class="button button-primary button-hero">
+                                <span class="dashicons dashicons-update"></span>
+                                <?php esc_html_e('Start Migration to EUR', 'abovewp-bulgarian-eurozone'); ?>
+                            </button>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=abovewp-bulgarian-eurozone')); ?>" class="button button-secondary button-hero">
+                                <?php esc_html_e('Cancel', 'abovewp-bulgarian-eurozone'); ?>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="abovewp-ai-banner">
+                    <div class="abovewp-ai-banner-content">
+                        <div class="abovewp-ai-banner-text">
+                            <h3><?php esc_html_e('Stop babysitting your WordPress sites', 'abovewp-bulgarian-eurozone'); ?></h3>
+                            <p><?php esc_html_e('Hire AI agents that work 24/7 so you don\'t have to. Automation, updates, backups, security, performance, content — handled automatically while you sleep.', 'abovewp-bulgarian-eurozone'); ?></p>
+                            <div class="abovewp-ai-banner-perks">
+                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('15 free credits at launch', 'abovewp-bulgarian-eurozone'); ?></span>
+                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('First 500 users lock in beta pricing forever', 'abovewp-bulgarian-eurozone'); ?></span>
+                            </div>
+                        </div>
+                        <div class="abovewp-ai-banner-actions">
+                            <a href="https://abovewp.com/prelaunch" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-primary"><?php esc_html_e('Sign Up for Prelaunch', 'abovewp-bulgarian-eurozone'); ?></a>
+                            <a href="https://abovewp.com/prelaunch/agencies" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-secondary"><?php esc_html_e('Agency Partner Program', 'abovewp-bulgarian-eurozone'); ?></a>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="abovewp-footer">
+                    <div class="abovewp-footer-links">
+                        <a href="https://abovewp.com" target="_blank"><?php esc_html_e('Website', 'abovewp-bulgarian-eurozone'); ?></a>
+                        <a href="https://abovewp.com/support" target="_blank"><?php esc_html_e('Support', 'abovewp-bulgarian-eurozone'); ?></a>
+                        <a href="https://profiles.wordpress.org/wpabove/#content-plugins" target="_blank"><?php esc_html_e('Check our other plugins', 'abovewp-bulgarian-eurozone'); ?></a>
+                    </div>
+                    <p class="abovewp-footer-copy">&copy; <?php echo esc_html(gmdate('Y')); ?> AboveWP</p>
+                </footer>
             </div>
         </div>
-        
+
         <script type="text/javascript">
         jQuery(document).ready(function($) {
             let isRunning = false;

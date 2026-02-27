@@ -236,15 +236,29 @@ msgstr "Изберете къде искате да се показват цен
 msgid "Show EUR price"
 msgstr "Показване на цена в EUR"
 
-#: includes/class-abovewp-admin-menu.php:83
-msgctxt "abovewp"
-msgid "Visit our website"
-msgstr "Посетете нашия уебсайт"
+#: includes/class-abovewp-admin-menu.php
+msgid "Plugin Dashboard"
+msgstr "Табло с плъгини"
 
-#: includes/class-abovewp-admin-menu.php:88
-msgctxt "abovewp"
+#: includes/class-abovewp-admin-menu.php
+msgid "Visit Website"
+msgstr "Посетете уебсайта"
+
+#: includes/class-abovewp-admin-menu.php
 msgid "Available Plugins"
 msgstr "Налични плъгини"
+
+#: includes/class-abovewp-admin-menu.php
+msgid "Website"
+msgstr "Уебсайт"
+
+#: includes/class-abovewp-admin-menu.php
+msgid "Support"
+msgstr "Поддръжка"
+
+#: includes/class-abovewp-admin-menu.php
+msgid "Check our other plugins"
+msgstr "Вижте другите ни плъгини"
 
 #: abovewp-bulgarian-eurozone.php:313
 #: abovewp-bulgarian-eurozone.php:409
@@ -461,3 +475,37 @@ msgstr "Неуспешно финализиране на миграцията: %
 #: abovewp-bulgarian-eurozone.php
 msgid "Migration progress reset"
 msgstr "Прогресът на миграцията е нулиран"
+
+#: includes/class-abovewp-admin-menu.php
+#: abovewp-bulgarian-eurozone.php
+msgid "Stop babysitting your WordPress sites"
+msgstr "Спрете да се тревожите за WordPress сайтовете си"
+
+#: includes/class-abovewp-admin-menu.php
+#: abovewp-bulgarian-eurozone.php
+msgid "Hire AI agents that work 24/7 so you don't have to. Automation, updates, backups, security, performance, content — handled automatically while you sleep."
+msgstr "Наемете AI агенти, които работят 24/7, за да не се налага вие. Автоматизация, актуализации, архиви, сигурност, производителност, съдържание — обработени автоматично, докато спите."
+
+#: includes/class-abovewp-admin-menu.php
+#: abovewp-bulgarian-eurozone.php
+msgid "15 free credits at launch"
+msgstr "15 безплатни кредита при стартиране"
+
+#: includes/class-abovewp-admin-menu.php
+#: abovewp-bulgarian-eurozone.php
+msgid "First 500 users lock in beta pricing forever"
+msgstr "Първите 500 потребители заключват бета цените завинаги"
+
+#: includes/class-abovewp-admin-menu.php
+#: abovewp-bulgarian-eurozone.php
+msgid "Sign Up for Prelaunch"
+msgstr "Регистрирайте се за предварителното стартиране"
+
+#: includes/class-abovewp-admin-menu.php
+#: abovewp-bulgarian-eurozone.php
+msgid "Agency Partner Program"
+msgstr "Партньорска програма за агенции"
+
+#: includes/class-abovewp-admin-menu.php
+msgid "Dismiss this notice"
+msgstr "Затваряне на това известие"

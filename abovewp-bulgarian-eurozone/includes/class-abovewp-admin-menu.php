@@ -22,6 +22,8 @@ if (!class_exists('AboveWP_Admin_Menu')) {
         public static function init() {
             add_action('admin_menu', array(__CLASS__, 'add_menu_page'));
             add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_dashboard_styles'));
+            add_action('admin_notices', array(__CLASS__, 'display_promo_notice'));
+            add_action('wp_ajax_abovewp_dismiss_promo_notice', array(__CLASS__, 'ajax_dismiss_promo_notice'));
         }
 
         /**
@@ -31,9 +33,15 @@ if (!class_exists('AboveWP_Admin_Menu')) {
             // Only load on AboveWP admin page
             if ($hook === 'toplevel_page_abovewp') {
                 wp_enqueue_style(
+                    'abovewp-font-inter',
+                    'https://fonts.bunny.net/css?family=inter:400,500,600,700',
+                    array(),
+                    null
+                );
+                wp_enqueue_style(
                     'abovewp-admin-dashboard',
                     plugin_dir_url(dirname(__FILE__)) . 'assets/css/abovewp-admin-dashboard.css',
-                    array(),
+                    array('abovewp-font-inter'),
                     '1.0.0'
                 );
             }
@@ -76,23 +84,141 @@ if (!class_exists('AboveWP_Admin_Menu')) {
          */
         public static function display_menu_page() {
             ?>
-            <div class="wrap">
-                <div class="abovewp-admin-header">
-                    <img src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . 'assets/img/abovewp-logo.png'); ?>" alt="AboveWP" class="abovewp-logo">
-                    <div class="about-text">
-                        <a href="https://abovewp.com/" target="_blank"><?php echo esc_html_x('Visit our website', 'abovewp', 'abovewp-bulgarian-eurozone'); ?></a>
-                    </div>
+            <div class="abovewp-wrap">
+                <div class="abovewp-bg-effects">
+                    <div class="abovewp-bg-orb abovewp-bg-orb-1"></div>
+                    <div class="abovewp-bg-orb abovewp-bg-orb-2"></div>
                 </div>
-                <div class="aw-admin-dashboard">
-                    <div class="aw-admin-dashboard-content">
-                        <h2><?php echo esc_html_x('Available Plugins', 'abovewp', 'abovewp-bulgarian-eurozone'); ?></h2>
+                <div class="abovewp-container">
+                    <header class="abovewp-header">
+                        <div class="abovewp-logo-section">
+                            <img src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . 'assets/img/abovewp-logo.png'); ?>" alt="<?php esc_attr_e('AboveWP', 'abovewp-bulgarian-eurozone'); ?>" class="abovewp-logo">
+                            <span class="abovewp-badge">
+                                <span class="abovewp-badge-dot"></span>
+                                <?php esc_html_e('Plugin Dashboard', 'abovewp-bulgarian-eurozone'); ?>
+                            </span>
+                        </div>
+                        <div class="abovewp-header-actions">
+                            <a href="https://abovewp.com/" target="_blank"><?php esc_html_e('Visit Website', 'abovewp-bulgarian-eurozone'); ?></a>
+                        </div>
+                    </header>
+
+                    <div class="abovewp-ai-banner">
+                        <div class="abovewp-ai-banner-content">
+                            <div class="abovewp-ai-banner-text">
+                                <h3><?php esc_html_e('Stop babysitting your WordPress sites', 'abovewp-bulgarian-eurozone'); ?></h3>
+                                <p><?php esc_html_e('Hire AI agents that work 24/7 so you don\'t have to. Automation, updates, backups, security, performance, content — handled automatically while you sleep.', 'abovewp-bulgarian-eurozone'); ?></p>
+                                <div class="abovewp-ai-banner-perks">
+                                    <span class="abovewp-ai-banner-perk"><?php esc_html_e('15 free credits at launch', 'abovewp-bulgarian-eurozone'); ?></span>
+                                    <span class="abovewp-ai-banner-perk"><?php esc_html_e('First 500 users lock in beta pricing forever', 'abovewp-bulgarian-eurozone'); ?></span>
+                                </div>
+                            </div>
+                            <div class="abovewp-ai-banner-actions">
+                                <a href="https://abovewp.com/prelaunch" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-primary"><?php esc_html_e('Sign Up for Prelaunch', 'abovewp-bulgarian-eurozone'); ?></a>
+                                <a href="https://abovewp.com/prelaunch/agencies" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-secondary"><?php esc_html_e('Agency Partner Program', 'abovewp-bulgarian-eurozone'); ?></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="abovewp-section">
+                        <div class="abovewp-section-header">
+                            <h2 class="abovewp-section-title"><?php esc_html_e('Available Plugins', 'abovewp-bulgarian-eurozone'); ?></h2>
+                        </div>
                         <div class="aw-admin-dashboard-grid">
                             <?php do_action('abovewp_admin_dashboard_plugins'); ?>
                         </div>
                     </div>
+
+                    <footer class="abovewp-footer">
+                        <div class="abovewp-footer-links">
+                            <a href="https://abovewp.com" target="_blank"><?php esc_html_e('Website', 'abovewp-bulgarian-eurozone'); ?></a>
+                            <a href="https://abovewp.com/support" target="_blank"><?php esc_html_e('Support', 'abovewp-bulgarian-eurozone'); ?></a>
+                            <a href="https://profiles.wordpress.org/wpabove/#content-plugins" target="_blank"><?php esc_html_e('Check our other plugins', 'abovewp-bulgarian-eurozone'); ?></a>
+                        </div>
+                        <p class="abovewp-footer-copy">&copy; <?php echo esc_html(gmdate('Y')); ?> AboveWP</p>
+                    </footer>
                 </div>
             </div>
             <?php
         }
+
+        /**
+         * Display promotional admin notice
+         */
+        public static function display_promo_notice() {
+            if (!current_user_can('manage_options')) {
+                return;
+            }
+
+            $dismissed_at = get_user_meta(get_current_user_id(), 'abovewp_promo_notice_dismissed_at', true);
+            if ($dismissed_at && (time() - (int) $dismissed_at) < 1209600) {
+                return;
+            }
+
+            $nonce = wp_create_nonce('abovewp_dismiss_promo_notice');
+            ?>
+            <div id="abovewp-promo-notice" class="notice" style="display:flex;align-items:center;gap:18px;padding:20px 24px;border-left:4px solid #0582ff;background:linear-gradient(135deg,rgba(5,130,255,0.15) 0%,rgba(168,85,247,0.15) 50%,rgba(236,72,153,0.1) 100%),#0f0f17;position:relative;">
+                <style>
+                    #abovewp-promo-notice .abovewp-notice-content{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;}
+                    #abovewp-promo-notice h3{margin:0;font-size:15px;font-weight:700;color:#ffffff;}
+                    #abovewp-promo-notice p{margin:0;color:#94a3b8;font-size:13px;line-height:1.5;}
+                    #abovewp-promo-notice .abovewp-notice-actions{display:flex;gap:10px;flex-shrink:0;}
+                    #abovewp-promo-notice .abovewp-notice-btn{display:inline-block;padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;line-height:1.4;}
+                    #abovewp-promo-notice .abovewp-notice-btn-primary{background:#0582ff;color:#fff;}
+                    #abovewp-promo-notice .abovewp-notice-btn-primary:hover{background:#0468d0;color:#fff;}
+                    #abovewp-promo-notice .abovewp-notice-btn-secondary{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;}
+                    #abovewp-promo-notice .abovewp-notice-btn-secondary:hover{background:linear-gradient(135deg,#6d28d9,#9333ea);color:#fff;}
+                    #abovewp-promo-notice .abovewp-notice-dismiss{position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;color:#64748b;font-size:18px;line-height:1;padding:4px;}
+                    #abovewp-promo-notice .abovewp-notice-dismiss:hover{color:#94a3b8;}
+                    #abovewp-promo-notice .abovewp-notice-perks{display:flex;gap:10px;margin-top:6px;}
+                    #abovewp-promo-notice .abovewp-notice-perk{font-size:12px;font-weight:600;color:#0582FF;background:rgba(5,130,255,0.1);padding:4px 12px;border-radius:100px;border:1px solid rgba(5,130,255,0.2);}
+                    #abovewp-promo-notice .abovewp-notice-logo{height:30px;width:auto;display:block;margin-bottom:6px;}
+                </style>
+                <div class="abovewp-notice-content">
+                    <div>
+                        <img src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . 'assets/img/abovewp-logo.png'); ?>" alt="AboveWP" class="abovewp-notice-logo">
+                        <h3><?php esc_html_e('Stop babysitting your WordPress sites', 'abovewp-bulgarian-eurozone'); ?></h3>
+                        <p><?php esc_html_e('Hire AI agents that work 24/7 so you don\'t have to. Automation, updates, backups, security, performance, content — handled automatically while you sleep.', 'abovewp-bulgarian-eurozone'); ?></p>
+                        <div class="abovewp-notice-perks">
+                            <span class="abovewp-notice-perk"><?php esc_html_e('15 free credits at launch', 'abovewp-bulgarian-eurozone'); ?></span>
+                            <span class="abovewp-notice-perk"><?php esc_html_e('First 500 users lock in beta pricing forever', 'abovewp-bulgarian-eurozone'); ?></span>
+                        </div>
+                    </div>
+                    <div class="abovewp-notice-actions">
+                        <a href="https://abovewp.com/prelaunch" target="_blank" class="abovewp-notice-btn abovewp-notice-btn-primary"><?php esc_html_e('Sign Up for Prelaunch', 'abovewp-bulgarian-eurozone'); ?></a>
+                        <a href="https://abovewp.com/prelaunch/agencies" target="_blank" class="abovewp-notice-btn abovewp-notice-btn-secondary"><?php esc_html_e('Agency Partner Program', 'abovewp-bulgarian-eurozone'); ?></a>
+                    </div>
+                </div>
+                <button type="button" class="abovewp-notice-dismiss" title="<?php esc_attr_e('Dismiss this notice', 'abovewp-bulgarian-eurozone'); ?>">&times;</button>
+                <script>
+                (function(){
+                    var notice = document.getElementById('abovewp-promo-notice');
+                    if (!notice) return;
+                    notice.querySelector('.abovewp-notice-dismiss').addEventListener('click', function(){
+                        notice.style.display = 'none';
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', ajaxurl, true);
+                        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                        xhr.send('action=abovewp_dismiss_promo_notice&_wpnonce=<?php echo esc_js($nonce); ?>');
+                    });
+                })();
+                </script>
+            </div>
+            <?php
+        }
+
+        /**
+         * AJAX handler for dismissing the promo notice
+         */
+        public static function ajax_dismiss_promo_notice() {
+            check_ajax_referer('abovewp_dismiss_promo_notice');
+
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error('Unauthorized', 403);
+            }
+
+            update_user_meta(get_current_user_id(), 'abovewp_promo_notice_dismissed_at', time());
+            wp_send_json_success();
+        }
     }
-} 
+}
