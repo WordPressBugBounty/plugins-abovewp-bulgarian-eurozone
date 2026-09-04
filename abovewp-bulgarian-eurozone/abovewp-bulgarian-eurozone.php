@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AboveWP Bulgarian Eurozone
  * Description: Adds bidirectional dual currency display (BGN ⇄ EUR) for WooCommerce as Bulgaria prepares to join the Eurozone
- * Version: 2.3.0
+ * Version: 2.3.1
  * Author: AboveWP
  * Author URI: https://abovewp.com
  * Text Domain: abovewp-bulgarian-eurozone
@@ -10,7 +10,7 @@
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * WC requires at least: 5.0
- * WC tested up to: 10.4
+ * WC tested up to: 11.1
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
@@ -21,7 +21,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('ABOVEWP_BGE_VERSION', '2.3.0');
+define('ABOVEWP_BGE_VERSION', '2.3.1');
 define('ABOVEWP_BGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ABOVEWP_BGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -705,23 +705,6 @@ class AboveWP_Bulgarian_Eurozone {
 
                     <?php submit_button(null, 'primary', 'submit', true, $this->is_site_currency_supported() ? [] : ['disabled' => 'disabled']); ?>
                 </form>
-
-                <div class="abovewp-ai-banner">
-                    <div class="abovewp-ai-banner-content">
-                        <div class="abovewp-ai-banner-text">
-                            <h3><?php esc_html_e('Stop babysitting your WordPress sites', 'abovewp-bulgarian-eurozone'); ?></h3>
-                            <p><?php esc_html_e('Hire AI agents that work 24/7 so you don\'t have to. Automation, updates, backups, security, performance, content — handled automatically while you sleep.', 'abovewp-bulgarian-eurozone'); ?></p>
-                            <div class="abovewp-ai-banner-perks">
-                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('15 free credits at launch', 'abovewp-bulgarian-eurozone'); ?></span>
-                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('First 500 users lock in beta pricing forever', 'abovewp-bulgarian-eurozone'); ?></span>
-                            </div>
-                        </div>
-                        <div class="abovewp-ai-banner-actions">
-                            <a href="https://abovewp.com/prelaunch" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-primary"><?php esc_html_e('Sign Up for Prelaunch', 'abovewp-bulgarian-eurozone'); ?></a>
-                            <a href="https://abovewp.com/prelaunch/agencies" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-secondary"><?php esc_html_e('Agency Partner Program', 'abovewp-bulgarian-eurozone'); ?></a>
-                        </div>
-                    </div>
-                </div>
 
                 <footer class="abovewp-footer">
                     <div class="abovewp-footer-links">
@@ -1648,23 +1631,6 @@ class AboveWP_Bulgarian_Eurozone {
                                 <?php esc_html_e('Cancel', 'abovewp-bulgarian-eurozone'); ?>
                             </a>
                         </p>
-                    </div>
-                </div>
-
-                <div class="abovewp-ai-banner">
-                    <div class="abovewp-ai-banner-content">
-                        <div class="abovewp-ai-banner-text">
-                            <h3><?php esc_html_e('Stop babysitting your WordPress sites', 'abovewp-bulgarian-eurozone'); ?></h3>
-                            <p><?php esc_html_e('Hire AI agents that work 24/7 so you don\'t have to. Automation, updates, backups, security, performance, content — handled automatically while you sleep.', 'abovewp-bulgarian-eurozone'); ?></p>
-                            <div class="abovewp-ai-banner-perks">
-                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('15 free credits at launch', 'abovewp-bulgarian-eurozone'); ?></span>
-                                <span class="abovewp-ai-banner-perk"><?php esc_html_e('First 500 users lock in beta pricing forever', 'abovewp-bulgarian-eurozone'); ?></span>
-                            </div>
-                        </div>
-                        <div class="abovewp-ai-banner-actions">
-                            <a href="https://abovewp.com/prelaunch" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-primary"><?php esc_html_e('Sign Up for Prelaunch', 'abovewp-bulgarian-eurozone'); ?></a>
-                            <a href="https://abovewp.com/prelaunch/agencies" target="_blank" class="abovewp-ai-banner-btn abovewp-ai-banner-btn-secondary"><?php esc_html_e('Agency Partner Program', 'abovewp-bulgarian-eurozone'); ?></a>
-                        </div>
                     </div>
                 </div>
 

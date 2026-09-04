@@ -2,13 +2,13 @@
 Contributors: wpabove, pdpetrov98
 Tags: eurozone, bulgaria, currency, dual-currency, euro
 Requires at least: 5.0
-Tested up to: 6.9
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.3.0
+Stable tag: 2.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 WC requires at least: 5.0
-WC tested up to: 10.4
+WC tested up to: 11.1
 
 Display WooCommerce prices in both Bulgarian Lev (BGN) and Euro (EUR) bidirectionally as Bulgaria prepares to join the Eurozone.
 
@@ -101,6 +101,10 @@ Yes! The migration tool processes products in batches of 50, making it suitable 
 2. Settings Page Part 2
 
 == Changelog ==
+
+= 2.3.1 =
+* Removed the AboveWP promotional banner and admin notice
+* Tested up to WordPress 7.1 and WooCommerce 11.1
 
 = 2.3.0 =
 * Design update
